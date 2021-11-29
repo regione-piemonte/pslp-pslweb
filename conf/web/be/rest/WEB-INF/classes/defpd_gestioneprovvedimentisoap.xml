@@ -1,0 +1,73 @@
+<!-- ##################################################### -->
+<!-- # Copyright Regione Piemonte - 2021                 # -->
+<!-- # SPDX-License-Identifier: EUPL-1.2-or-later        # -->
+<!-- ##################################################### -->
+<porta-delegata name="gestioneprovvedimentiPD">
+  <services>
+    <service name="gestioneprovvedimentiPA" public-interface-class="it.csi.silp.silpserver.interfacecsi.gestioneprovvedimenti.GestioneProvvedimentiSrv" >
+      <operations>
+        <operation name="loadConfigurazioniConferimentoDIDService" type="synch-call">
+          <param-list>
+            <param name="p0" type="it.csi.silpcommonobj.dati.common.CallInfoSilpDTO" />
+          </param-list>
+          <ret-val type="it.csi.silpcommonobj.dati.schedaprofessionale.did.EsitoConfigurazioneConferimentoDidDTO"/>
+        </operation>
+        <operation name="saveProfilingDidService" type="synch-call">
+          <param-list>
+            <param name="p0" type="it.csi.silpcommonobj.dati.common.CallInfoSilpDTO" />
+            <param name="p1" type="it.csi.silpcommonobj.dati.schedaprofessionale.did.pslp.DatiInputProfilingDidDTO" />
+          </param-list>
+          <ret-val type="it.csi.silpcommonobj.dati.schedaprofessionale.did.pslp.EsitoProfilingDidDTO"/>
+        </operation>
+         <operation name="aggiornamentoDidService" type="synch-call">
+          <param-list>
+            <param name="p0" type="it.csi.silpcommonobj.dati.common.CallInfoSilpDTO" />
+            <param name="p1" type="it.csi.silpcommonobj.dati.schedaprofessionale.did.pslp.DatiInputAggiornamentoDidDTO" />
+          </param-list>
+          <ret-val type="it.csi.silpcommonobj.dati.schedaprofessionale.did.pslp.EsitoAggiornamentoDidDTO"/>
+        </operation>
+        <operation name="ricercaDettaglioDIDService" type="synch-call">
+          <param-list>
+            <param name="p0" type="it.csi.silpcommonobj.dati.common.CallInfoSilpDTO" />
+            <param name="p1" type="java.lang.Long" />
+          </param-list>
+          <ret-val type="it.csi.silpcommonobj.dati.schedaprofessionale.did.EsitoRicercaDidService"/>
+		 </operation>
+      </operations>
+    </service>
+  </services>
+  <config>
+    <url-pa></url-pa>
+    <pluggable-pd-list chooser-class="it.csi.csi.porte.FixedDelegateChooser">
+      <pluggable-pd name="gestioneprovvedimentiPA" class="it.csi.csi.porte.soap.apache.PortaDelegataSoap" url-pa="@@@silpserver.url.provv@@@">
+      <properties>
+         <property name="csi.connection.timeout" value="600000" />
+         <property name="csi.http.timeout" value="600000" />
+         <property name="csi.SSL.sendTimeout" value="600000" />
+         <property name="csi.SSL.receiveTimeout" value="600000" />
+        </properties>
+      </pluggable-pd>
+    </pluggable-pd-list>
+  <pre-function-handler-list>
+   <pluggable-fh
+     name="ClientVersionChecker"
+     class="it.csi.pslp.pslweb.pluginpdpa.ClientVersionChecker">
+    </pluggable-fh>
+   <pluggable-fh
+     name="ClientSecurityPlugin"
+     class="it.csi.pslp.pslweb.pluginpdpa.ClientSecurityPlugin">
+    </pluggable-fh>
+   <pluggable-fh
+     name="Decompressore"
+     class="it.csi.silp.silpserver.util.pluginpdpa.ClientSilpPlugin">
+    </pluggable-fh>
+    </pre-function-handler-list>
+    <post-function-handler-list>
+   <pluggable-fh
+     name="Decompressore"
+     class="it.csi.silp.silpserver.util.pluginpdpa.ClientSilpPlugin" >
+    </pluggable-fh>
+  </post-function-handler-list>
+    <queue-manager url="" />
+  </config>
+</porta-delegata>

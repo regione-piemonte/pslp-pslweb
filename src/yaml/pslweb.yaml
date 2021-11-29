@@ -1,0 +1,5891 @@
+#################################################
+# Copyright Regione Piemonte - 2021	        	#
+# SPDX-License-Identifier: EUPL-1.2-or-later	#
+# 					                        	#
+#################################################
+
+swagger: '2.0'
+info:
+  title: Portale Servizi Lavoro API
+  description: API per il backend del portale servizi lavoro.
+  version: 1.0.0
+host: 'localhost:8080'
+schemes:
+  - http
+basePath: /restfacade/be
+produces:
+  - application/json
+paths:
+# SYSTEM
+  /ping:
+    get:
+      operationId: ping
+      summary: servizio di ping del backend
+      description: Restituisce una stringa per confermare la disponibilita' del backend
+      produces:
+        - application/json
+      tags:
+        - system
+      responses:
+        '200':
+          description: stringa di conferma funzionamento
+          schema:
+            type: string
+          headers:
+            someheader:
+              description: header di risposta di test
+              type: string  
+        default:
+          description: Unexpected error
+          schema:
+            type: string
+# SECURITY
+  /currentUser:
+    get:
+      operationId: getCurrentUser
+      summary: get current user
+      description: restituisce l'utente corrente
+      produces:
+        - application/json
+      tags:
+        - security
+      responses:
+        '200':
+          description: l'utente corrente
+          schema:
+            $ref: '#/definitions/UserInfo'
+        default:
+          description: Unexpected error
+          schema:
+            type: string
+  /currentUser/menu:
+    get:
+      operationId: getMenuStructureForUser
+      description: restituisce la struttura di menu (con abilitazioni) per l'utente corrente
+      produces: 
+        - application/json
+      tags:
+        - security
+      responses:
+        '200':
+          description: la struttura dei menu con abilitazioni
+          schema:
+            type: array
+            items: 
+              $ref: '#/definitions/MenuItem'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /currentUser/roles:
+    get:
+      operationId: getUserRoles
+      summary: get current user role list
+      description: restituisce la lista di ruoli a cui appartiene l'utente corrente
+      produces:
+        - application/json
+      tags:
+        - security
+      responses:
+        '200':
+          description: la lista dei ruoli dell'utente collegato
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Role'
+        default:
+          description: Unexpected error
+          schema:
+            type: string
+  /currentUser/roles/{role}:
+    get:
+      operationId: isUserInRole
+      summary: l'utente appartiene al ruolo?
+      description: challenge di appartenenza dell'utente corrente al ruolo specificato
+      produces:
+        - application/json
+      tags:
+        - security
+      parameters:
+        - in: path
+          name: role
+          required: true
+          type: string
+      responses:
+        '200':
+          description: se l'utente corrente appartiene al ruolo specificato
+          schema:
+            $ref: '#/definitions/Role'
+        '401':
+          description: se l'utente corrente non appartiene al ruolo specificato
+  /currentUser/screens/{screen}:
+    get:
+      operationId: getScreenByCod
+      description: restituisce la struttura dello screen specificato, con le abilitazioni per l'utente collegato
+      produces:
+        - application/json
+      tags:
+        - security
+      parameters:
+        - in: path
+          name: screen
+          required: true
+          type: string
+      responses:
+        '200':
+          description: la struttura della schermata, con abilitazioni
+          schema:
+            $ref: '#/definitions/Screen'
+        '403':
+          description: se l'utente non e' abilitato alla schermata
+          schema:
+            $ref: '#/definitions/ErrorDef'
+        '404':
+          description: se lo screen specificato non e' stato trovato
+          schema:
+            $ref: '#/definitions/ErrorDef'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /currentUser/screens/{screen}/widgets/{widget}:
+    get:
+      operationId: getWidget
+      description: restituisce il widget specificato. E' utile per interrogazioni puntuali
+      produces:
+        - application/json
+      tags:
+        - security
+      parameters:
+        - in: path
+          name: screen
+          required: true
+          type: string
+        - in: path
+          name: widget
+          required: true
+          type: string
+      responses:
+        '200':
+          description: le info del widget specificato
+          schema:
+            $ref: '#/definitions/Widget'
+        '404':
+          description: se lo screen o il widget specificati non sono stati trovati
+          schema:
+            $ref: '#/definitions/ErrorDef' 
+  /currentUser/logout:
+    get:
+      operationId: logout
+      summary: servizio per invalidazione sessione utente e cookie XSRF
+      description: Restituisce una stringa per confermare l'avvenuto logout
+      produces:
+        - application/json
+      tags:
+        - system
+      responses:
+        '200':
+          description: stringa di conferma funzionamento
+          schema:
+            type: string
+        default:
+          description: Unexpected error
+          schema:
+            type: string
+# BUSINESS
+  /calendario:
+    post:
+      operationId: findCalendario
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: body
+          name: parametriRicercaDisponibilitaIncontri
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriRicercaPrimaDisponibilitaIncontri'
+      responses:
+        '200':
+          description: recupera il calendario
+          schema:
+            $ref: '#/definitions/Calendario'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /calendario/intervallo_disponibile:
+    post:
+      operationId: findIntervalloDisponibile
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: body
+          name: parametriRicercaDisponibilitaIncontri
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriRicercaPrimaDisponibilitaIncontri'
+      responses:
+        '200':
+          description: verifica gli slot liberi del calendario
+          schema:
+            type: array
+            items:
+              type: string
+              format: date-time
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /calendario/save_incontro:
+    post:
+      operationId: saveIncontro
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: body
+          name: parametriSalvataggioIncontro
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriSalvataggioIncontro'
+      responses:
+        '200':
+          description: salva un incontro
+          schema:
+            $ref: "#/definitions/EsitoSalvataggioIncontro"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /calendario/slots:
+    post:
+      operationId: findSlots
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: body
+          name: parametriRicercaDisponibilitaIncontri
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriRicercaDisponibilitaIncontri'
+      responses:
+        '200':
+          description: verifica gli slot liberi del calendario
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/SlotIncontro"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /calendario/sportelli:
+    get:
+      operationId: findSportelli
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: query
+          name: cod_ambito
+          required: true
+          type: string
+        - in: query
+          name: cod_tipo_utente
+          required: true
+          type: string
+          description: tipologia di utente CIT, APL, CPI, REG
+        - in: query
+          name: codice_ministeriale_comune_domicilio
+          required: false
+          type: string
+        - in: query
+          name: codice_ministeriale_comune_residenza
+          required: false
+          type: string
+      responses:
+        '200':
+          description: sportelli relativi alla provincia di domicilio dell'utente
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Ente"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /configurazioni/informazioni_aggiuntive:
+    get:
+      operationId: getConfigurazioniInformazioniAggiuntive
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: query
+          name: cod_ambito
+          required: false
+          type: string
+        - in: query
+          name: flag_all
+          required: false
+          type: string
+      responses:
+        '200':
+          description: restituisce le configurazioni aggiuntive dell'utente
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/ConfigurazioneInformazioneAggiuntiva"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/cittadinanze:
+    get:
+      operationId: getCittadinanze
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: restituisce l'elenco delle cittadinanze
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Cittadinanza"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/comuni:
+    get:
+      operationId: getComuni
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: query
+          name: descrizione
+          required: false
+          type: string
+        - in: query
+          name: codice_provincia
+          required: false
+          type: string
+        - in: query
+          name: id_cpi_silp
+          required: false
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: elenco di tutti i comuni filtrati per i primi caratteri e opzionalmente per provincia 
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Comune"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/centri_per_impiego:
+    get:
+      operationId: getCentriPerImpiego
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: query
+          name: id_cpi_silp
+          required: false
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Restituisce i CPI definiti in SILP. Se indicato idCpiSilp restituisce il record relativo, altrimenti tutti i CPI.
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/CentroPerImpiego"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/cpi_della_provincia:
+    get:
+      operationId: getCpiDellaProvincia
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: query
+          name: codice_ministeriale_provincia
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Restituisce i CPI definiti in SILP filtrati per un codice ministeriale provincia.
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/CentroPerImpiego"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/cpi_del_comune:
+    get:
+      operationId: getCpiDelComune
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: query
+          name: codice_ministeriale_comune
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Restituisce il CPI del codice ministeriale del comune passato come parametro.
+          schema:
+            type: object
+            items:
+              $ref: "#/definitions/CentroPerImpiego"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/qualifiche_professionali:
+    get:
+      operationId: getQualificheProfessionali
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: query
+          name: codice
+          required: false
+          type: string
+        - in: query
+          name: descrizione
+          required: true
+          type: string
+      responses:
+        '200':
+          description: elenco di tutte le qualifiche professionali filtrate su alcuni caratteri della descrizione o del codice
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Decodifica"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'           
+  /decodifiche/condizioni_occupazionali:
+    get:
+      operationId: getCondizioniOccupazionali
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: elenco delle condizioni occupazionali
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/CondizioneOccupazionale"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/gradi_studio:
+    get:
+      operationId: getGradiStudio
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: elenco dei gradi dei titoli di studio utilizzabili per profiling
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/GradoStudio"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/gradi_studio_silp:
+    get:
+      operationId: getGradiStudioSilp
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: elenco dei gradi dei titoli di studio completi presenti in silp
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/GradoStudio"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'            
+  /decodifiche/motivi_presenza_in_italia:
+    get:
+      operationId: getMotiviPresenzaInItalia
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: elenco dei motivi presenza in Italia
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/MotivoPresenzaInItalia"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/motivi_rilascio_permesso_di_soggiorno:
+    get:
+      operationId: findMotiviRilascioPermessoDiSoggiorno
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: elenco di tutti i motivi di rilascio di permessi di soggiorno 
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/MotivoRilascioPermessoSoggiorno"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/nazioni:
+    get:
+      operationId: getNazioni
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: restituisce l'elenco delle nazioni
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Nazione"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/province:
+    get:
+      operationId: getProvince
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: elenco di tutte le province italiane
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Provincia"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/sedimi:
+    get:
+      operationId: getSedimi
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: elenco di tutti i sedimi 
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Sedime"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/status_extra_ue:
+    get:
+      operationId: findElencoStatusExtraUE
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: elenco di tutti i gli status extra UE 
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/StatusExtraUE"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/decodifiche_sap:
+    get:
+      operationId: findElenchiDecodificheSap
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: elenco di varie decodifiche utilizzate nella sap
+          schema:
+            $ref: "#/definitions/ElenchiDecodifiche"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'          
+  /decodifiche/titoli_studio:
+    get:
+      operationId: getTitoliStudio
+      parameters:
+        - in: query
+          name: id_grado_studio_silp
+          required: false
+          type: integer
+          format: int64
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: elenco dei titoli di studio utilizzabili nella gestione del profiling
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/TitoloStudio"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/titoli_studio_silp:
+    get:
+      operationId: getTitoliStudioSilp
+      parameters:
+        - in: query
+          name: id_grado_studio_silp
+          required: false
+          type: integer
+          format: int64
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: elenco dei titoli di studio completi presenti in silp
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/TitoloStudio"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'          
+  /decodifiche/tipi_documenti/{cod_ambito}:
+    get:
+      operationId: findTipiDocumenti
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: cod_ambito
+          required: true
+          type: string
+      tags:
+        - business
+      responses:
+        '200':
+          description: elenco di tutti i tipi di documento 
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/TipoDocumento"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/tipi_documenti_all/{cod_ambito}:
+    get:
+      operationId: findAllTipiDocumenti
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: cod_ambito
+          required: true
+          type: string
+      tags:
+        - business
+      responses:
+        '200':
+          description: elenco di tutti i tipi di documento anche scaduti o non più validi 
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/TipoDocumento"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /decodifiche/tipi_responsabilita:
+    get:
+      operationId: findTipiResponsabilita
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: elenco di tutti i tipi di responsabilità 
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/TipoResponsabilita"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /parametri/{cod_parametro}:
+    get:
+      operationId: getParametro
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: cod_parametro
+          required: true
+          type: string
+      responses:
+        '200':
+          description: parametro di sistema
+          schema:
+            $ref: "#/definitions/Parametro"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /documenti/{id_documento}:
+    get:
+      operationId: loadDocumento
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_documento
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: documento dell'utente
+          schema:
+            $ref: "#/definitions/Documento"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+    delete:
+      operationId: deleteDocumento
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_documento
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: esito
+          schema:
+            $ref: '#/definitions/Esito'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /documenti/save_documento:
+    post:
+      operationId: saveDocumento
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: body
+          name: documento
+          required: true
+          schema:
+            $ref: '#/definitions/Documento'
+      responses:
+        '200':
+          description: salva i dati del documento
+          schema:
+            $ref: "#/definitions/Esito"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /documenti/save_stato_documento:
+    post:
+      operationId: saveStatoDocumento
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: body
+          name: documento
+          required: true
+          schema:
+            $ref: '#/definitions/Documento'
+      responses:
+        '200':
+          description: salva lo stato del documento
+          schema:
+            $ref: "#/definitions/Esito"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /menu/{cod_menu}:
+    get:
+      operationId: loadMenu
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: cod_menu
+          required: true
+          type: string
+      responses:
+        '200':
+          description: restituisce elenco link del menu identificato da cod_menu
+          schema:
+            type: array
+            items: 
+              $ref: '#/definitions/MenuHomeCard'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /menu/help/{cod_help}:
+    get:
+      operationId: loadMenuHelpPage
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: cod_help
+          required: true
+          type: string
+      responses:
+        '200':
+          description: restituisce oggetto help del menu identificato da cod_help
+          schema:
+            $ref: '#/definitions/MenuHelpPage'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /menu/domande_did:
+    get:
+      operationId: loadDomandeDidPage
+      produces:
+        - application/json
+      tags:
+        - business
+      responses:
+        '200':
+          description: restituisce elenco di domande per la did
+          schema:
+            $ref: '#/definitions/DomandeDidPage'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /messaggi/{cod_messaggio}:
+    get:
+      operationId: loadMessaggio
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: cod_messaggio
+          required: true
+          type: string
+      responses:
+        '200':
+          description: restituisce l'ultimo messaggio valido identificato da cod_messaggio
+          schema:
+            $ref: "#/definitions/Messaggio"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /privacy/{id_utente}:
+    get:
+      operationId: loadPrivacyUtente
+      produces:
+        - application/json
+      tags:
+        - privacy
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: restituisce l'elenco delle privacy da confermare o confermate legate all'utente
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Privacy"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /privacy/{id_utente}/minore/{id_minore}:
+    get:
+      operationId: loadPrivacyMinore
+      produces:
+        - application/json
+      tags:
+        - privacy
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: id_minore
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: restituisce l'elenco delle privacy da confermare o confermate legate al minore 
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Privacy"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti:
+    post:
+      operationId: saveUtente
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: body
+          name: utente
+          required: true
+          schema:
+            $ref: '#/definitions/Utente'
+      responses:
+        '200':
+          description: salva i dati dell'utente
+          schema:
+            $ref: "#/definitions/Utente"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{codice_fiscale}:
+    get:
+      operationId: getUtenteByCf
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: codice_fiscale
+          required: true
+          type: string
+      responses:
+        '200':
+          description: dettagli dell'utente
+          schema:
+            $ref: "#/definitions/Utente"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/id/{id_utente}:
+    get:
+      operationId: getUtenteById
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: dettagli dell'utente
+          schema:
+            $ref: "#/definitions/Utente"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/verifica_minore/{codice_fiscale}:
+    get:
+      operationId: verificaMinore
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: codice_fiscale
+          required: true
+          type: string
+        - in: query
+          name: cod_ambito
+          required: true
+          type: string
+      responses:
+        '200':
+          description: esito verifica minore
+          schema:
+            $ref: "#/definitions/EsitoVerificaMinore"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/adesione:
+    get:
+      operationId: getAdesioneYG
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: restituisce lo stato dell'adesione a YG dell'utente
+          schema:
+            $ref: "#/definitions/AdesioneYG"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/calcolo_profiling_yg:
+    post:
+      operationId: calcolaProfilingYG
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: parametri
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriCalcoloProfilingYG'
+      responses:
+        '200':
+          description: calcola il nuovo profiling YG dell'utente
+          schema:
+            $ref: "#/definitions/ProfilingYG"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/dati_responsabile:
+    get:
+      operationId: getDatiResponsabile
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: resituisce i dati responsabile relativi all'utente come SAP
+          schema:
+            $ref: "#/definitions/SchedaAnagraficoProfessionale"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/domandardc:
+    get:
+      operationId: getDomandaRDC
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: restituisce la domanda RDC (Reddito di Cittadinanza) dell'utente
+          schema:
+            $ref: "#/definitions/DomandaRDC"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/documenti/{cod_ambito}:
+    get:
+      operationId: findDocumenti
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: cod_ambito
+          required: true
+          type: string
+      responses:
+        '200':
+          description: documenti dell'utente
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Documento"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/documenti/{cod_ambito}/{id_did}:
+    get:
+      operationId: findDocumentiPattiServizio
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: id_did
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: cod_ambito
+          required: true
+          type: string
+      responses:
+        '200':
+          description: patti di servizio legati alla did dell'utente
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Documento"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/documentiCM/{cod_ambito}/{id_richiesta}:
+    get:
+      operationId: findDocumentiRichiestaIscrizione
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: id_richiesta
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: cod_ambito
+          required: true
+          type: string
+      responses:
+        '200':
+          description: documenti legati alla richiesta di iscrizione
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Documento"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/incontri:
+    get:
+      operationId: findIncontri
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: query
+          name: cod_ambito
+          type: string
+          required: false
+      responses:
+        '200':
+          description: incontri dell'utente
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/PrenotazioneIncontro"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/informazioni_aggiuntive:
+    get:
+      operationId: findInformazioniAggiuntive
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: query
+          name: cod_ambito
+          type: string
+          required: true
+      responses:
+        '200':
+          description: informazioni aggiuntive dell'utente
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/InformazioneAggiuntiva"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/profiling_yg:
+    get:
+      operationId: getProfilingYG
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: restituisce il profiling YG dell'utente
+          schema:
+            $ref: "#/definitions/ProfilingYG"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/sap_vuota:
+    get:
+      operationId: getSAPVuota
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: resituisce i dati di una SAP vuota relativa ad un utente
+          schema:
+            $ref: "#/definitions/SchedaAnagraficoProfessionale"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/verificaesistenzasap/{codice_fiscale}:
+    get:
+      operationId: verificaEsistenzaSAPSuSistemaMinisteriale
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: codice_fiscale
+          required: true
+          type: string
+      responses:
+        '200':
+          description: esito con codice sap 
+          schema:
+            $ref: "#/definitions/EsitoVerificaEsistenzaSap"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'          
+  /utenti/{id_utente}/sap:
+    get:
+      operationId: getSAP
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: query
+          name: cod_ambito
+          required: false
+          type: string
+      responses:
+        '200':
+          description: scheda anagrafico professionale dell'utente
+          schema:
+            $ref: "#/definitions/SchedaAnagraficoProfessionale"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/save_dati_responsabile:
+    post:
+      operationId: saveResponsabile
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: utente
+          required: true
+          schema:
+            $ref: '#/definitions/SchedaAnagraficoProfessionale'
+      responses:
+        '200':
+          description: salva i dati responsabile relativi all'utente, ottenuti come SAP
+          schema:
+            $ref: "#/definitions/Esito"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/save_informazioni_aggiuntive:
+    post:
+      operationId: saveInformazioniAggiuntive
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: informazione_aggiuntiva
+          required: true
+          schema:
+            $ref: '#/definitions/InformazioneAggiuntiva'
+      responses:
+        '200':
+          description: salva le informazioni aggiuntive dell'utente
+          schema:
+            $ref: "#/definitions/InformazioneAggiuntiva"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/save_sap:
+    post:
+      operationId: saveSAP
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: parametri_sap
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriSalvataggioSAP'
+      responses:
+        '200':
+          description: salva la SAP dell'utente
+          schema:
+            $ref: "#/definitions/Esito"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/save_utente_a_carico:
+    post:
+      operationId: saveUtenteACarico
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: utente
+          required: true
+          schema:
+            $ref: '#/definitions/UtenteACarico'
+      responses:
+        '200':
+          description: salva l'utente a carico
+          schema:
+            $ref: "#/definitions/Esito"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/send_stato_adesioneGG:
+    post:
+      operationId: sendStatoAdesione
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: parametri_sendStatoAdesione
+          required: true
+          schema:
+            $ref: '#/definitions/DatiInputStatoAdesione'
+      responses:
+        '200':
+          description: invia lo stato della adesione
+          schema:
+            $ref: "#/definitions/EsitoSendStatoAdesione"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/responsabili:
+    get:
+      operationId: findTutori
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: recupera i responsabili
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Utente"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/utenti_a_carico:
+    get:
+      operationId: findUtentiACarico
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: elenca gli utenti a carico (figli, etc) dell'utente
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/UtenteACarico"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/{id_utente}/riepilogo_utenti_iscrizione:
+    get:
+      operationId: findRiepilogoUtentiIscrizione
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: elenca dati per iscrizione pe utente ed eventuali minori
+          schema:
+            $ref: "#/definitions/EsitoRiepilogoIscrizione"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/silp/{id_silp}/adesione:
+    get:
+      operationId: getAdesioneYGBySILP
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_silp
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: restituisce lo stato dell'adesione a YG dell'utente
+          schema:
+            $ref: "#/definitions/AdesioneYG"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/silp/{id_silp}/domandardc:
+    get:
+      operationId: getDomandaRDCBySILP
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_silp
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: restituisce la domanda RDC (Reddito di Cittadinanza) dell'utente
+          schema:
+            $ref: "#/definitions/DomandaRDC"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /utenti/silp/{id_silp}/sap:
+    get:
+      operationId: getSAPBySILP
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_silp
+          required: true
+          type: integer
+          format: int64
+        - in: query
+          name: cod_ambito
+          required: false
+          type: string
+      responses:
+        '200':
+          description: scheda anagrafico professionale dell'utente
+          schema:
+            $ref: "#/definitions/SchedaAnagraficoProfessionale"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  # COLLOCAMENTO MIRATO
+  /collocamento_mirato/configurazione_familiari_a_carico:
+    get:
+      operationId: loadConfigurazioneFamiliariACarico
+      produces:
+        - application/json
+      tags:
+        - collocamento mirato
+      responses:
+        '200':
+          description: restituisce le decodifiche per le form del collocamento mirato
+          schema:
+            $ref: "#/definitions/ConfigurazioneFamiliariACarico"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'  
+  /collocamento_mirato/{id_utente}:
+    get:
+      operationId: getRiepilogoCollocamentoMirato
+      produces:
+        - application/json
+      tags:
+        - collocamento mirato
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: restituisce un insieme di informazioni relative alla situazione del collocamento mirato dell'utente
+          schema:
+            $ref: "#/definitions/EsitoRiepilogoCollocamentoMirato"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'  
+  /collocamento_mirato/{id_utente}/reddito:          
+    post:
+      operationId: saveRedditoCollocamentoMirato
+      produces:
+        - application/json
+      tags:
+        - collocamento mirato
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: parametriReddito
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriSalvataggioRedditoCollocamentoMirato'
+      responses:
+        '200':
+          description: salva o annulla un reddito di collocamento mirato per un utente
+          schema:
+            $ref: "#/definitions/EsitoSalvataggioRedditoCollocamentoMirato"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'  
+  /collocamento_mirato/{id_utente}/save_dichiarazione:
+    post:
+      operationId: saveFamiliariACarico
+      produces:
+        - application/json
+      tags:
+        - collocamento mirato
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: messaggio
+          required: true
+          schema:
+            $ref: '#/definitions/DettaglioCompletoDichiarazioneFamiliariACarico'
+      responses:
+        '200':
+          description: dichiarazione salvata
+          schema:
+            $ref: '#/definitions/EsitoSaveDichiarazione'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef' 
+# Legge 68 (Collocamento Mirato)
+  /collocamento_mirato/configurazione_collocamento_mirato:
+    get:
+      operationId: loadConfigurazioniCollocamentoMirato
+      produces:
+        - application/json
+      tags:
+        - collocamento mirato
+      responses:
+        '200':
+          description: restituisce le decodifiche per le form del collocamento mirato
+          schema:
+            $ref: "#/definitions/ConfigurazioneCollocamentoMirato"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'     
+  /collocamento_mirato/{id_utente}/find_richiesta_iscrizione_collocamento_mirato:
+    get:
+      operationId: findRichiestaIscrizioneCollocamentoMirato
+      produces:
+        - application/json
+      tags:
+        - collocamento mirato
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: query
+          name: id_richiesta
+          required: false
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: restituisce richieste o dettaglio richiesta
+          schema:
+            $ref: "#/definitions/EsitoRicercaRichiestaIscrizioneCollocamentoMirato"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'  
+  /collocamento_mirato/{id_utente}/save_richiesta_iscrizione_collocamento_mirato:
+    post:
+      operationId: saveRichiestaIscrizioneCollocamentoMirato
+      produces:
+        - application/json
+      tags:
+        - collocamento mirato
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: parametri_richiesta
+          required: true
+          schema:
+            $ref: '#/definitions/DatiInputSaveRichiestaIscrizioneCollocamentoMirato'
+      responses:
+        '200':
+          description: salvataggio bozza o richiesta
+          schema:
+            $ref: "#/definitions/EsitoSaveRichiestaIscrizioneCollocamentoMirato"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'      
+# DID
+  /did/configurazione_profiling:
+    get:
+      operationId: loadConfigurazioneProfilingDid
+      produces:
+        - application/json
+      tags:
+        - did
+      responses:
+        '200':
+          description: restituisce le decodifiche per le form del profiling did
+          schema:
+            $ref: "#/definitions/ConfigurazioneProfilingDid"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'             
+  /did/{id_utente}/save_profiling_did_service:
+     post:
+      operationId: saveProfilingDidService
+      produces:
+        - application/json
+      tags:
+        - did
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: parametri_sendProfilingDid
+          required: true
+          schema:
+            $ref: '#/definitions/DatiInputProfilingDid'
+      responses:
+        '200':
+          description: restituisce id inserito o messaggio errore
+          schema:
+            $ref: "#/definitions/EsitoSaveProfilingDid"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /did/{id_utente}/log_service:
+     post:
+      operationId: logService
+      produces:
+        - application/json
+      tags:
+        - did
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: query
+          name: msg
+          required: true
+          type: string
+      responses:
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /did/{id_utente}/save_did_service:
+     post:
+      operationId: saveDidService
+      produces:
+        - application/json
+      tags:
+        - did
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: parametri_sendDid
+          required: true
+          schema:
+            $ref: '#/definitions/DatiInputAggiornamentoDid'
+      responses:
+        '200':
+          description: restituisce id inserito o messaggio errore
+          schema:
+            $ref: "#/definitions/EsitoSaveDid"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /did/{id_utente}/change_state_did:
+     post:
+      operationId: changeStateDidAfterInsertProfilingService
+      produces:
+        - application/json
+      tags:
+        - did
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: parametri_sendDid
+          required: true
+          schema:
+            $ref: '#/definitions/DatiInputAggiornamentoDid'
+      responses:
+        '200':
+          description: restituisce id inserito o messaggio errore
+          schema:
+            $ref: "#/definitions/EsitoSaveDid"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /did/{id_utente}/controllo_did_service:
+     post:
+      operationId: controlloDidService
+      produces:
+        - application/json
+      tags:
+        - did
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: query
+          name: scrivere_log_su_db
+          required: true
+          type: string
+        - in: body
+          name: parametri_sendDid
+          required: true
+          schema:
+            $ref: '#/definitions/DatiInputAggiornamentoDid'
+      responses:
+        '200':
+          description: restituisce messaggio errore
+          schema:
+            $ref: "#/definitions/EsitoSaveDid"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /did/{id_utente}/ricerca_did:
+    get:
+      operationId: ricercaDettaglioDIDService
+      produces:
+        - application/json
+      tags:
+        - did
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: restituisce la did dell'utente
+          schema:
+            $ref: "#/definitions/EsitoDettaglioDid"
+       
+# STAMPE
+  /stampe/{id_utente}/adesione:
+    get:
+      operationId: creaStampaAdesione
+      produces:
+        - application/pdf
+      tags:
+        - stampe
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: query
+          name: id_sil_lav_adesione
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: crea la stampa
+          schema:
+            type: string
+            format: byte
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /stampe/{id_utente}/reddito_di_cittadinanza:
+    get:
+      operationId: creaStampaRedditoDiCittadinanza
+      produces:
+        - application/pdf
+      tags:
+        - stampe
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: crea la stampa
+          schema:
+            type: string
+            format: byte
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /stampe/{id_utente}/sap:
+    get:
+      operationId: creaStampaSap
+      produces:
+        - application/pdf
+      tags:
+        - stampe
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: crea la stampa
+          schema:
+            type: string
+            format: byte
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /stampe/{id_utente}/pattoDiServizio:
+    get:
+      operationId: creaStampaPattoDiServizio
+      produces:
+        - application/pdf
+      tags:
+        - stampe
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: query
+          name: id_did
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: crea la stampa del patto di Servizio
+          schema:
+            type: string
+            format: byte
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /stampe/{id_utente}/iscrizione_collocamento_mirato:
+    get:
+      operationId: creaStampaIscrizioneCollocamentoMirato
+      produces:
+        - application/pdf
+      tags:
+        - stampe
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: crea la stampa dell'iscrizione
+          schema:
+            type: string
+            format: byte
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+# GESTORE            
+  /operatore/{codice_fiscale}:
+    get:
+      operationId: getOperatoreByCf
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: codice_fiscale
+          required: true
+          type: string
+      responses:
+        '200':
+          description: dettagli dell'operatore
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Operatore"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/ambiti:
+    get:
+      operationId: getAmbiti
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: ambiti
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Ambito"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/applica_dato_a_calendari:
+    post:
+      operationId: applicaDatoACalendari
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: parametriDatoCalendari
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriDatoCalendari'
+      responses:
+        '200':
+          description: esito operazione
+          schema:
+            $ref: '#/definitions/Esito'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/applica_eccezione_a_calendari:
+    post:
+      operationId: applicaEccezioneACalendari
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: parametriEccezioneCalendari
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriEccezioneCalendari'
+      responses:
+        '200':
+          description: esito operazione
+          schema:
+            $ref: '#/definitions/Esito'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/calendari:
+    post:
+      operationId: findCalendari
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: parametriRicercaCalendari
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriRicercaCalendari'
+      responses:
+        '200':
+          description: descrizioni dei calendari
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/ConfigurazioneCalendarioHeader"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/enti:
+    get:
+      operationId: getEnti
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: query
+          name: cod_tipo_utente
+          required: true
+          type: string
+          description: tipologia di utente CIT, APL, CPI, REG
+        - in: query
+          name: modalita
+          required: true
+          type: string
+          description: I=Inserimento, M=Modifica
+      responses:
+        '200':
+          description: enti
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Ente"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/messaggi:
+    get:
+      operationId: getMessaggi
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: messaggio visualizzato all'utente
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Messaggio"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/calendari/{id_calendario}:
+    get:
+      operationId: loadCalendario
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: id_calendario
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: configurazione calendario
+          schema:
+            $ref: '#/definitions/ConfigurazioneCalendario'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/calendari/{id_calendario}/imposta_blocco_calendario/{flag_blocco_calendario}:
+    post:
+      operationId: impostaBloccoCalendario
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: id_calendario
+          required: true
+          type: integer
+          format: int64
+          description: identificativo in PSLP_T_CALENDARIO
+        - in: path
+          name: flag_blocco_calendario
+          required: true
+          type: boolean
+      responses:
+        '200':
+          description: esito operazione
+          schema:
+            $ref: '#/definitions/Esito'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/calendari/{id_calendario}/incontri:
+    post:
+      operationId: findIncontriCalendario
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: id_calendario
+          required: true
+          type: integer
+          format: int64
+          description: identificativo in PSLP_T_CALENDARIO
+        - in: body
+          name: parametri_ricerca_incontri_calendario
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriRicercaIncontriCalendario'
+      responses:
+        '200':
+          description: incontri del calendario
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/PrenotazioneIncontro"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /operatore/{id_utente}/calendari/{id_calendario}/slot:
+    post:
+      operationId: findSlotCalendario
+      produces:
+        - application/json
+      tags:
+        - business
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: id_calendario
+          required: true
+          type: integer
+          format: int64
+          description: identificativo in PSLP_T_CALENDARIO
+        - in: body
+          name: parametri_ricerca_incontri_calendario
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriRicercaIncontriCalendario'
+      responses:
+        '200':
+          description: incontri del calendario
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/SlotIncontro"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'
+  /operatore/{id_utente}/calendari/{id_calendario}/duplica_calendario:
+    post:
+      operationId: duplicaCalendario
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: id_calendario
+          required: true
+          type: integer
+          format: int64
+          description: identificativo in PSLP_T_CALENDARIO
+        - in: body
+          name: parametri_duplicazione_calendario
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriDuplicazioneCalendario'
+      responses:
+        '200':
+          description: configurazione nuovo calendario
+          schema:
+            $ref: '#/definitions/ConfigurazioneCalendario'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/calendari/{id_calendario}/elimina_calendario:
+    post:
+      operationId: eliminaCalendario
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: id_calendario
+          required: true
+          type: integer
+          format: int64
+          description: identificativo in PSLP_T_CALENDARIO
+      responses:
+        '200':
+          description: esito operazione
+          schema:
+            $ref: '#/definitions/Esito'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/calendari/{id_calendario}/vincoli_eliminazione_calendario:
+    get:
+      operationId: verificaVincoliEliminazioneCalendario
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: id_calendario
+          required: true
+          type: integer
+          format: int64
+          description: identificativo in PSLP_T_CALENDARIO
+      responses:
+        '200':
+          description: configurazione nuovo calendario
+          schema:
+            $ref: '#/definitions/Esito'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef' 
+  /operatore/{id_utente}/elimina_eccezione: 
+    post:
+      operationId: eliminaEccezione
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: parametri_eliminazione_eccezione
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriEliminazioneEccezione'
+      responses:
+        '200':
+          description: esito
+          schema:
+            $ref: '#/definitions/Esito'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/elimina_fascia: 
+    post:
+      operationId: eliminaFascia
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: parametri_eliminazione_fascia
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriEliminazioneFascia'
+      responses:
+        '200':
+          description: esito
+          schema:
+            $ref: '#/definitions/Esito'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/periodi/duplica_periodo: 
+    post:
+      operationId: duplicaPeriodo
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: parametri_duplicazione_periodo
+          required: true
+          schema:
+            $ref: '#/definitions/ParametriDuplicazionePeriodo'
+      responses:
+        '200':
+          description: configurazione salvata
+          schema:
+            $ref: '#/definitions/EsitoDuplicazionePeriodo'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/periodi/{id_periodo}/genera_slot: 
+    post:
+      operationId: generaSlot
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: id_periodo
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: configurazione salvata
+          schema:
+            $ref: '#/definitions/Esito'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/save_calendario_dati_generali:
+    post:
+      operationId: saveCalendarioDatiGenerali
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: configurazione_calendario
+          required: true
+          schema:
+            $ref: '#/definitions/ConfigurazioneCalendario'
+      responses:
+        '200':
+          description: configurazione salvata
+          schema:
+            $ref: '#/definitions/ConfigurazioneCalendario'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/save_calendario_fasce:
+    post:
+      operationId: saveCalendarioFasce
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: configurazione_calendario
+          required: true
+          schema:
+            $ref: '#/definitions/ConfigurazioneCalendario'
+      responses:
+        '200':
+          description: configurazione salvata
+          schema:
+            $ref: '#/definitions/ConfigurazioneCalendario'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/save_calendario_eccezioni:
+    post:
+      operationId: saveCalendarioEccezioni
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: configurazione_calendario
+          required: true
+          schema:
+            $ref: '#/definitions/ConfigurazioneCalendario'
+      responses:
+        '200':
+          description: configurazione salvata
+          schema:
+            $ref: '#/definitions/ConfigurazioneCalendario'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/save_calendario_dati_operativi:
+    post:
+      operationId: saveCalendarioDatiOperativi
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: configurazione_calendario
+          required: true
+          schema:
+            $ref: '#/definitions/ConfigurazioneCalendario'
+      responses:
+        '200':
+          description: configurazione salvata
+          schema:
+            $ref: '#/definitions/ConfigurazioneCalendario'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/save_calendario_mail:
+    post:
+      operationId: saveCalendarioMail
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: configurazione_calendario
+          required: true
+          schema:
+            $ref: '#/definitions/ConfigurazioneCalendario'
+      responses:
+        '200':
+          description: configurazione salvata
+          schema:
+            $ref: '#/definitions/ConfigurazioneCalendario'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/save_configurazione_informazioni_aggiuntive:
+    post:
+      operationId: saveConfigurazioneInformazioniAggiuntive
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: messaggio
+          required: true
+          schema:
+            $ref: '#/definitions/ConfigurazioneInformazioneAggiuntiva'
+      responses:
+        '200':
+          description: configurazione salvata
+          schema:
+            $ref: '#/definitions/ConfigurazioneInformazioneAggiuntiva'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/messaggi_aggiuntivi:
+    get:
+      operationId: loadMessaggiAggiuntiviAmbito
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: query
+          name: cod_ambito
+          required: false
+          type: string
+      responses:
+        '200':
+          description: messaggio visualizzato all'utente
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/ConfigurazioneMessaggiAggiuntivi"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/save_messaggio:
+    post:
+      operationId: saveMessaggio
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: messaggio
+          required: true
+          schema:
+            $ref: '#/definitions/Messaggio'
+      responses:
+        '200':
+          description: messaggio visualizzato all'utente
+          schema:
+            $ref: '#/definitions/Messaggio'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/save_messaggi_aggiuntivi:
+    post:
+      operationId: saveMessaggiAggiuntiviAmbito
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: messaggi
+          required: true
+          schema:
+            $ref: '#/definitions/ConfigurazioneMessaggiAggiuntivi'
+      responses:
+        '200':
+          description: configurazione salvata
+          schema:
+            $ref: '#/definitions/Esito'
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+  /operatore/{id_utente}/sportelli:
+    get:
+      operationId: getSportelli
+      produces:
+        - application/json
+      tags:
+        - gestore
+      parameters:
+        - in: path
+          name: id_utente
+          required: true
+          type: integer
+          format: int64
+        - in: query
+          name: cod_tipo_utente
+          required: true
+          type: string
+          description: tipologia di utente CIT, APL, CPI, REG
+      responses:
+        '200':
+          description: sportelli
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Sportello"
+        default:
+          description: errore generico
+          schema:
+            $ref: '#/definitions/ErrorDef'       
+# MAPPA
+  /uffici:
+    get:
+      operationId: getUffici
+      produces:
+        - application/json
+      tags:
+        - mappa
+      responses:
+        '200':
+          description: elenco degli uffici
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Ufficio"
+        '500':
+          description: errore
+# ENTITIES
+definitions:
+  Actor:
+    type: object
+    properties:
+      cod:
+        type: string
+      name:
+        type: string
+  AdesioneYG:
+    type: object
+    properties:
+      id_sil_lav_adesione:
+        type: integer
+        format: int64
+      codice:
+        type: string
+      data_adesione:
+        type: string
+        format: date-time
+      codice_fiscale:
+        type: string
+      identificativo_sap:
+        type: string
+      data_stato_corrente:
+        type: string
+        format: date-time
+      stato_corrente_finale:
+        type: string
+      descrizione:
+        type: string
+      regione:
+        type: string
+      flg_anpal_stato_corrente:
+        type: string
+      motivo_rifiuto_stato_corrente:
+        type: string
+      flg_rifiuto_stato_corrente:
+        type: string
+      data_rifiuto:
+        type: string
+        format: date-time
+      presenzaPiuAdesioniAperte:
+        type: boolean
+  Ambito:
+    type: object
+    properties:
+      codice:
+        type: string
+      descrizione:
+        type: string
+  Calendario:
+    type: object
+    properties:
+      invio_conferma_prenotazione:
+        type: string
+      codice_ambito:
+        type: string
+      codice_operatore:
+        type: integer
+        format: int64
+      id_calendario:
+        type: integer
+        format: int64
+      flag_annulla_garanzia_giovani:
+        type: string
+      subcodice:
+        type: integer
+        format: int64
+      ore_invio_promemoria:
+        type: integer
+      ore_limite_spostamento:
+        type: integer
+      flag_visibile_cpi:
+        type: string
+      gruppo_operatore:
+        type: string
+      nome:
+        type: string
+      flag_bloccato:
+        type: string
+      messaggio_spostamento:
+        type: string
+      messaggio_annullamento:
+        type: string
+  CallOptions:
+    type: object
+    properties:
+      desiredStatus:
+        type: integer
+        description: http status che il servizio dovra sollevare
+      executionTime:
+        type: integer
+        description: >-
+          tempo in millisecondi che il servizio dovra impiegare per l'esecuzione
+          (per testare meccanismi di timeout)
+  CategoriaProtetta:
+    type: object
+    properties:
+      id_silp:
+        type: string
+      descrizione_silp:
+        type: string
+      codice_ministero:
+        type: string
+      descrizione_ministero:
+        type: string
+      flg_speciale:
+        type: string
+      data_inizio:
+        type: string
+        format: date-time
+      data_fine:
+        type: string
+        format: date-time
+  CategoriaProtettaDisab:
+    type: object
+    properties:
+      id_silp:
+        type: string
+      num_grado_disabilita_min:
+        type: integer
+        format: int64
+      flg_attivare_grado_o_categoria:
+        type: string
+      descrizione:
+        type: string
+  Cittadinanza:
+    type: object
+    properties:
+      codice_ministeriale:
+        type: string
+        description: codice ministeriale
+      sigla:
+        type: string
+      descrizione:
+        type: string
+        description: descrizione
+      codice_ministeriale_nazione:
+        type: string
+        description: codice ministeriale nazione
+  Comune:
+    type: object
+    properties:
+      codice_ministeriale:
+        type: string
+        description: codice ministeriale
+      descrizione:
+        type: string
+        description: descrizione
+      cap:
+        type: string
+        description: cap
+      provincia:
+        type: object
+        $ref: "#/definitions/Provincia"
+        description: provincia
+      id_cpi_silp:
+        type: integer
+        format: int64
+        description: id cpi silp
+  CondizioneOccupazionale:
+    type: object
+    properties:
+      codice:
+        type: string
+      codice_silp:
+        type: integer
+        format: int64
+      descrizione:
+        type: string
+  ConfigurazioneCalendario:
+    type: object
+    properties:
+      id_calendario:
+        type: integer
+        format: int64
+        description: identificativo univoco
+      nome:
+        type: string
+        description: nome calendario
+      codice_ambito:
+        type: string
+        description: codice ambito
+      gruppo_operatore:
+        type: string
+      codice_operatore:
+        type: integer
+        format: int64
+      subcodice:
+        type: integer
+        format: int64
+      dati_operativi:
+        type: object
+        $ref: "#/definitions/ConfigurazioneCalendarioDatiOperativi"
+      periodi_validita:
+        type: array
+        items:
+          $ref: "#/definitions/ConfigurazioneCalendarioPeriodoValidita"
+      mail:
+        type: object
+        $ref: "#/definitions/ConfigurazioneCalendarioMail"
+  ConfigurazioneCalendarioDatiOperativi:
+    type: object
+    properties:
+      flag_visibilita_cpi:
+        type: string
+      ore_limite_spostamento:
+        type: integer
+      messaggio_spostamento:
+        type: string
+      flag_annullamento:
+        type: boolean
+      messaggio_annullamento:
+        type: string
+  ConfigurazioneCalendarioEccezione:
+    type: object
+    properties:
+      id_eccezione:
+        type: integer
+        format: int64
+      giorno:
+        type: string
+        format: date-time
+      ora_inizio:
+        type: integer
+      ora_fine:
+        type: integer
+      num_max_prenotazioni:
+        type: integer
+      flag_elaborata:
+        type: boolean
+  ConfigurazioneCalendarioFascia:
+    type: object
+    properties:
+      id_fascia:
+        type: integer
+        format: int64
+      id_giorno_settimana:
+        type: integer
+      num_max_prenotazioni:
+        type: integer
+      ora_inizio:
+        type: integer
+      ora_fine:
+        type: integer
+      durata_slot:
+        type: integer
+  ConfigurazioneCalendarioHeader:
+    type: object
+    properties:
+      id_calendario:
+        type: integer
+        format: int64
+        description: identificativo in PSLP_T_CALENDARIO
+      descrizione_ambito:
+        type: string
+        description: ambito di appartenenza
+      nome:
+        type: string
+        description: nome del calendario
+      descrizione_ente:
+        type: string
+        description: descrizione del cpi di appartenenza del calendario
+      giorni_attivi:
+        type: string
+        description: sequenza di giorni ddd
+      periodo:
+        type: string
+        description: da-a
+      visibile_in_base:
+        type: string
+      promemoria:
+        type: boolean
+      eliminato:
+        type: boolean
+      bloccato:
+        type: boolean
+      ore_limite_spostamento:
+        type: integer
+      annulla_garanzia_giovani:
+        type: boolean
+      messaggio_annullamento_appuntamento:
+        type: string
+      messaggio_spostamento_appuntamento:
+        type: string
+      numero_slot_liberi:
+        type: integer
+      numero_slot_prenotabili:
+        type: integer
+  ConfigurazioneCalendarioMail:
+    type: object
+    properties:
+      flag_invio_mail_conferma_prenotazione:
+        type: boolean
+      ore_invio_mail_promemoria_prenotazione:
+        type: integer
+      oggetto_mail:
+        type: string
+      messaggio_aggiuntivo_mail_conferma:
+        type: string
+      messaggio_aggiuntivo_mail_promemoria:
+        type: string
+      messaggio_aggiuntivo_mail_annullamento:
+        type: string
+      messaggio_aggiuntivo_mail_non_presentato:
+        type: string
+  ConfigurazioneCalendarioPeriodoValidita:
+    type: object
+    properties:
+      id_periodo:
+        type: integer
+        format: int64
+      data_da:
+        type: string
+        format: date-time
+      data_a:
+        type: string
+        format: date-time
+      flag_slot_generati:
+        type: boolean
+      fasce:
+        type: array
+        items:
+          $ref: "#/definitions/ConfigurazioneCalendarioFascia"
+      eccezioni:
+        type: array
+        items:
+          $ref: "#/definitions/ConfigurazioneCalendarioEccezione"
+  ConfigurazioneCollocamentoMirato:
+    type: object
+    properties:
+      elenco_tipo_iscrizione:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+      elenco_motivo_iscrizione:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+      elenco_stato_iscrizione:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+      elenco_tipo_comunicazione:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+      elenco_categoria_protetta_disabili:
+        type: array
+        items:
+          $ref: "#/definitions/CategoriaProtettaDisab"  
+      elenco_categoria_protetta:
+        type: array
+        items:
+          $ref: "#/definitions/CategoriaProtetta"
+      elenco_qualifiche_non_vedenti:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+      elenco_categoria_invalidita_disabili:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+      limite_reddito_lordo_annuo_rapporto_autonomo:
+        type: integer
+        format: int64
+      limite_reddito_lordo_annuo_rapporto_subordinato:
+        type: integer
+        format: int64
+      grado_disabilita_non_vedenti:
+        type: string
+      grado_disabilita_sordomuti:
+        type: string
+      elenco_dichiarazione_visita_revisione_invalidita_civile:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+  ConfigurazioneFamiliariACarico:
+    type: object
+    properties:
+      elencoGradoParentela:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+      elencoDecodeMotivoCarico:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+      elencoMotivoCaricoDescrizioneLunga:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+      elencoCompletoMotivoCarico:
+        type: array
+        items:
+          $ref: "#/definitions/MotivoFamiliareACarico"
+      elencoCompletoMotivoCaricoCompresiScaduti:
+        type: array
+        items:
+          $ref: "#/definitions/MotivoFamiliareACarico"
+  ConfigurazioneInformazioneAggiuntiva:
+    type: object
+    properties:
+      codice:
+        type: integer
+        format: int64
+      codice_ministeriale:
+        type: string
+      cod_ambito:
+        type: string
+      descrizione:
+        type: string
+      bloccante:
+        type: string
+      valore:
+        type: string
+      flag_visibile_pslp:
+        type: string
+      data_inizio:
+        type: string
+        format: date-time
+        description: data inizio
+      data_fine:
+        type: string
+        format: date-time
+        description: data fine
+  ConfigurazioneMessaggiAggiuntivi:
+    type: object
+    properties:
+      cod_ambito:
+        type: string
+      messaggio_aggiuntivo_mail_notifica_inizio_domanda:
+        type: string
+      messaggio_aggiuntivo_mail_notifica_termine_domanda:
+        type: string
+  ConfigurazioneProfilingDid:
+    type: object
+    properties:
+      elencoCittadinanza:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+      elencoPosizioneProfessionale:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+      elencoIscrizioneCorso:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+      elencoPresenzaInItalia:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+      elencoCondizioniOccupazionali:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"  
+      elencoTitoloStudioProfiling:
+        type: array
+        items:
+          $ref: "#/definitions/TitoloStudio"
+      elencoGradoStudio:
+        type: array
+        items:
+          $ref: "#/definitions/GradoStudio"
+      configurazione_questionario:
+        type: object
+        $ref: "#/definitions/ConfigurazioneQuestionario"
+  ConoscenzaInformatica:
+    type: object 
+    properties:
+      tipo_conoscenza:
+        $ref: "#/definitions/Decodifica" 
+      livello_conoscenza:
+        $ref: "#/definitions/Decodifica" 
+      eventuali_specifiche:
+         type: string   
+      codice_categoria_conoscenza_informatica:
+         type: string  
+  CentroPerImpiego:
+    type: object
+    properties:
+      codice:
+        type: string
+        description: codice centro per impiego
+      descrizione:
+        type: string
+        description: descrizione
+      flg_attivo:  
+        type: boolean  
+        description: flg attivo
+      id_cpi_silp:
+        type: integer
+        format: int64
+        description: identificativo univoco su silp 
+      codice_ministeriale_provincia:
+        type: string
+        description: identificativo univoco su silp della provincia
+  DatiAmministrativi:
+    type: object
+    properties:
+      stato_occupazionale:
+        $ref: '#/definitions/Decodifica' 
+      condizione:
+        $ref: '#/definitions/Decodifica' 
+      categoria_dlg297:
+        $ref: '#/definitions/Decodifica' 
+      anzianita_disoccupazione_mesi:
+        type: integer
+        format: int64  
+      indice_profiling:  
+        type: string  
+      data_evento:
+        type: string
+        format: date-time  
+      data_dichiarazione_disponibilita:
+        type: string
+        format: date-time 
+      liste_speciali:
+        type: array
+        items:
+          $ref: '#/definitions/ListaSpeciale'    
+      obbligo_formativo_assolto:  
+        type: boolean  
+      appartenenza_categorie_protette:  
+        $ref: '#/definitions/Decodifica' 
+      indice_isee:  
+        type: string 
+  DatiInputSaveRichiestaIscrizioneCollocamentoMirato:
+    type: object
+    properties:
+      step_controllo:
+        type: string
+      richiesta:
+        type: object
+        $ref: "#/definitions/DettaglioRichiestaIscrizioneL68"
+  DatiInputStatoAdesione:
+    type: object
+    properties:
+      id_anagrafica:
+        type: integer
+        format: int64
+      codice_fiscale:
+        type: string
+      data_adesione:
+        type: string
+        format: date-time 
+      identificativo_sap:
+        type: string
+      id_adesione:
+        type: integer
+        format: int64
+      codice_stato_adesione:
+        type: string
+      data_stato_adesione:
+        type: string
+        format: date-time 
+      motivo:
+        type: string
+      codice_fiscale_operatore:
+        type: string
+      appuntamento_da_cancellare:
+        type: object
+        $ref: "#/definitions/PrenotazioneIncontro"
+  DatoreLavoro:
+    type: object
+    properties:
+      codice_fiscale:
+        type: string
+      denominazione:
+        type: string
+      indirizzo:
+        $ref: "#/definitions/Indirizzo"  
+      settore:
+         $ref: "#/definitions/Decodifica"
+  DettaglioDichiarazioneFamiliariACarico:
+    type: object
+    properties:
+      motivo_carico:
+        type: object
+        $ref: "#/definitions/Decodifica"
+      codice_fiscale_familiare:
+        type: string
+        description: codice fiscale familiare
+      cognome_familiare:
+        type: string
+      nome_familiare:
+        type: string
+      data_nascita_familiare:
+        type: string
+        format: date-time
+      sesso:
+        type: string
+      luogo_di_nascita:
+        $ref: "#/definitions/Luogo"
+      flg_validita_cf:
+        type: string
+  DettaglioCompletoDichiarazioneFamiliariACarico:
+    type: object
+    properties:
+      id_dichiarazione:
+        type: integer
+        format: int64
+      id_sil_lav_anagrafica:
+        type: integer
+        format: int64
+        description: id lavoratore su SILP
+      numero_familiari:
+        type: integer
+        format: int64  
+      anno_validita:
+        type: integer
+        format: int64
+      data_dichiarazione:
+        type: string
+        format: date-time
+      flag_ultima_dichiarazione_inserita:
+        type: boolean
+        description: true se e' l'ultima dichiarazione inserita
+      flag_duplicazione_dichiarazione:
+        type: boolean
+        description: true se la dichiarazione e' stata duplicata
+      fonte:
+        type: string
+      cpi:
+        type: object
+        $ref: "#/definitions/Decodifica"
+      data_nascita_dichiarante:
+        type: string
+        format: date-time
+      note:
+        type: string  
+      dettaglio_dichiarazione_familiari_a_carico:  
+        type: array
+        items:
+          $ref: "#/definitions/DettaglioDichiarazioneFamiliariACarico"
+  Decodifica:
+    type: object
+    properties:
+      codice_ministeriale:
+        type: string
+      codice_silp:
+        type: string
+      descrizione:
+        type: string 
+      data_inizio_validita:  
+        type: string
+        format: date-time
+      data_fine_validita:  
+        type: string
+        format: date-time
+      valido_oggi:
+        type: boolean
+        description: true sa oggi ricade nel periodo di validita' della decodifica
+  Documento:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      id_sil_lav_sap_did:
+        type: integer
+        format: int64
+      codice_tipo_documento:
+        type: string
+      codice_estensione:
+        type: string
+      codice_operatore:
+        type: integer
+        format: int64
+      codice_utente_inserimento:
+        type: string
+      codice_utente_aggiornamento:
+        type: string
+      data_inserimento:
+        type: string
+        format: date-time
+      data_inserim:
+        type: string
+        format: date-time
+      data_aggiornamento:
+        type: string
+        format: date-time
+      data_invio:
+        type: string
+        format: date-time
+      nome:
+        type: string
+      ambito:
+        type: string
+      pdf:
+        type: string
+        format: byte
+      subcodice:
+        type: integer
+        format: int64
+      note_operatore:
+        type: string
+      id_utente:
+        type: integer
+        format: int64
+      note_cittadino:
+        type: string
+      stato:
+        type: string
+      gruppo_operatore:
+        type: string
+      codice_fiscale_operatore:
+        type: string
+      flg_obbligatorio:
+        type: string
+      id_sil_rich_coll_mir:
+        type: integer
+        format: int64
+  DomandaRDC:
+    type: object
+    properties:
+      id_sil_lav_domanda_rdc:
+        type: integer
+        format: int64
+      codice:
+        type: string
+      data_domanda:
+        type: string
+        format: date-time
+      data_notifica_silp:
+        type: string
+        format: date-time
+      stato_domanda:
+        type: string
+      stato_politica_rc1:
+        type: string
+      data_stato_politica_rc1:
+        type: string
+        format: date-time
+      comune_residenza:
+        type: object
+        $ref: "#/definitions/Comune"
+      ente_residenza:
+        type: object
+        $ref: "#/definitions/Ente"
+  ElenchiDecodifiche:
+    type: object
+    properties:
+      lingue:
+        type: array
+        items:
+          $ref: '#/definitions/Decodifica'
+      gradi_conoscenza_lingue:
+        type: array
+        items:
+          $ref: '#/definitions/Decodifica'   
+      conoscenze_informatiche:
+        type: array
+        items:
+          $ref: '#/definitions/TipoConoscenzaInformatica' 
+      categorie_conoscenza_informatiche:
+        type: array
+        items:
+          $ref: '#/definitions/Decodifica'  
+        description: categorie silp di massima in cui suddividere le conoscenze informatiche. Non hanno un corrispettivo ministeriale, servono solo a semplificare le ricerche  
+      gradi_conoscenza_informatica:
+        type: array
+        items:
+          $ref: '#/definitions/Decodifica'
+      patenti:
+        type: array
+        items:
+          $ref: '#/definitions/Decodifica' 
+      patentini:
+        type: array
+        items:
+          $ref: '#/definitions/Decodifica' 
+      albi:
+        type: array
+        items:
+          $ref: '#/definitions/Decodifica' 
+      tipi_contratto:
+        type: array
+        items:
+          $ref: '#/definitions/TipoContratto' 
+      categorie_inquadramento:
+        type: array
+        items:
+          $ref: '#/definitions/Decodifica' 
+      modalita_lavoro:
+        type: array
+        items:
+          $ref: '#/definitions/Decodifica'   
+      certificazioni_attestazioni:
+        type: array
+        items:
+          $ref: '#/definitions/Decodifica' 
+      regioni:
+        type: array
+        items:
+          $ref: '#/definitions/Decodifica' 
+      settori_ateco:
+        type: array
+        items:
+          $ref: '#/definitions/Decodifica' 
+  Ente:
+    type: object
+    properties:
+      gruppo_operatore:
+        type: string
+      cod_operatore:
+        type: integer
+        format: int64
+      subcodice:
+        type: integer
+        format: int64
+      descrizione:
+        type: string
+      codice_ministeriale_comune:
+        type: string
+      codice_intermediario:
+        type: string
+      sportelli:
+        type: array
+        items:
+          $ref: "#/definitions/Sportello"
+  ErrorDef:
+    type: object
+    properties:
+      code:
+        type: string
+      messaggioCittadino:
+        type: string
+      errorMessage:
+        type: string
+      fields:
+        type: string
+        x-nullable: true
+  Esito:
+    type: object
+    properties:
+      code:
+        type: string
+      messaggioCittadino:
+        type: string
+      messaggioInformativo:
+        type: string  
+  EsitoDuplicazionePeriodo:
+    type: object
+    properties:
+      id_periodo_ceato:
+        type: integer
+        format: int64
+      code:
+        type: string
+      messaggioCittadino:
+        type: string
+  EsitoRiepilogoCollocamentoMirato:
+    type: object
+    properties:
+      messaggio_errore:
+        type: string
+      iscrizioneDisabili:
+        type: object
+        $ref: "#/definitions/IscrizioneCollocamentoMirato"
+      iscrizioneAltreCategorie:
+        type: object
+        $ref: "#/definitions/IscrizioneCollocamentoMirato"  
+      redditi:
+        type: array
+        items:
+          $ref: "#/definitions/RedditoCollocamentoMirato"
+      dettaglioCompletoDichiarazioneFamiliariACarico: 
+        type: array
+        items:
+          $ref: "#/definitions/DettaglioCompletoDichiarazioneFamiliariACarico"
+      elencoRichieste:
+        type: array
+        items:
+           $ref: "#/definitions/RichiestaIscrizioneL68Header"
+  EsitoSalvataggioIncontro:
+    type: object
+    properties:
+      messaggio_errore:
+        type: string
+      prenotazione_incontro:
+        type: object
+        $ref: "#/definitions/PrenotazioneIncontro"
+  EsitoSalvataggioRedditoCollocamentoMirato:
+    type: object
+    properties:
+      messaggio_errore:
+        type: string
+      codiceFiscaleOperatore:
+        type: string  
+      codiceFiscale:
+        type: string
+      idAnagraficaSilp:
+        type: integer
+        format: int64  
+      reddito:
+        type: object
+        $ref: "#/definitions/RedditoCollocamentoMirato"        
+  EsitoSaveDichiarazione:
+    type: object
+    properties:
+      messaggio_errore:
+        type: string
+      codiceFiscaleOperatore:
+        type: string  
+      codiceFiscale:
+        type: string
+      dichiarazione:
+        type: object
+        $ref: "#/definitions/DettaglioCompletoDichiarazioneFamiliariACarico"        
+  EsitoSendStatoAdesione:
+    type: object
+    properties:
+      idAnagraficaSilp:
+        type: integer
+        format: int64
+      idAdesioneSilp:
+        type: integer
+        format: int64
+      messaggioCittadino:
+        type: string
+      adesione:
+        type: object
+        $ref: "#/definitions/AdesioneYG" 
+      warning:
+        type: array
+        items:
+           $ref: '#/definitions/MappaErrori'
+      code:
+        type: string 
+      incontroCancellato:
+        type: boolean 
+  EsitoSaveProfilingDid:
+    type: object
+    properties:
+      idDatiProfiling:
+        type: integer
+        format: int64  
+      messaggioCittadino:
+        type: string            
+  EsitoSaveDid:
+    allOf:     # Combines the EsitoSilp  
+      - type: object
+        properties:
+          idDid:
+            type: integer
+            format: int64            
+      - $ref: '#/definitions/EsitoSilp'
+  EsitoVerificaEsistenzaSap:
+    type: object
+    properties:
+      codice_sap:
+        type: string
+      messaggioCittadino:
+        type: string
+  EsitoVerificaMinore:
+    type: object
+    properties:
+      codici_esito:
+        type: array
+        items:
+          type: string
+      utente:
+        type: object
+        $ref: "#/definitions/Utente"
+  EsperienzaLavoro:
+    type: object 
+    properties:
+      data_inizio_rapporto:
+        type: string
+        format: date-time
+      data_fine_rapporto:
+        type: string
+        format: date-time
+      tipo_contratto:
+        $ref: "#/definitions/Decodifica"
+      qualifica:
+        $ref: "#/definitions/Decodifica" 
+      categoria_inquadramento:
+        $ref: "#/definitions/Decodifica"   
+      datore_lavoro:
+        $ref: "#/definitions/DatoreLavoro" 
+      azienda_utilizzatrice:
+        $ref: "#/definitions/DatoreLavoro"  
+      data_fine_periodo_formativo:
+        type: string
+        format: date-time 
+      principali_mansioni:
+        type: string
+      assunzione_l68: 
+        type: boolean
+      lavoratore_in_mobilita: 
+        type: boolean
+      lavoro_stagionale: 
+        type: boolean   
+      lavoro_in_agricoltura:
+        type: boolean  
+      esperienza_dichiarata:
+        type: boolean
+        description: indica che l'esperienza e' dichiarata dal cittadino, non proveniente da una comunicazione ufficiale, puo' quindi essere modificata
+      modalita_lavoro:
+        $ref: "#/definitions/Decodifica" 
+      indirizzo_di_lavoro:
+        $ref: "#/definitions/Indirizzo" 
+  EventoPolitica:
+    type: object
+    properties:
+      evento:
+        $ref: "#/definitions/Decodifica"
+        description: tabella ministeriale EVENTI POLITICA es. 01 Proposta
+      data_evento:
+        type: string  
+        format: date  
+      descrizione: 
+        type: string  
+        maxLength: 100
+  FormazioneProfessionale: 
+    type: object 
+    properties:
+      titolo_corso:
+        type: string  
+      ente_erogatore:
+        type: string
+      regione_sede:
+        $ref: "#/definitions/Decodifica"
+        description: il codice ministeriale della regione
+      durata:
+        type: integer  
+      tipo_durata:
+        type: string
+        maxLength: 1
+        description: O ore, G giorni, M mesi, A anni 
+      certificazioni_attestazioni:
+        $ref: "#/definitions/Decodifica"  
+        description: Tabella ministeriale Attestazioni
+      stage:
+        type: boolean  
+      nome_azienda_stage:
+        type: string 
+      codice_fp:  
+        type: string 
+        description: codice identificativo di un corso se ottenuto dai servizi FP di formazione professionale
+  GradoStudio:
+    type: object
+    properties:
+      codice:
+        type: string
+      codice_silp:
+        type: integer
+        format: int64
+      descrizione:
+        type: string
+  Indirizzo:
+    type: object
+    properties:
+      indirizzo_esteso:
+        type: string
+      toponimo:
+        type: object
+        $ref: "#/definitions/Sedime"
+      indirizzo:
+        type: string
+      numero_civico:
+        type: string
+      localita:
+        type: string
+      comune:
+        type: object
+        $ref: "#/definitions/Comune"
+      stato:
+        type: object
+        $ref: "#/definitions/Nazione"
+  InformazioneAggiuntiva:
+    type: object
+    properties:
+      codice:
+        type: integer
+        format: int64
+      codice_configurazione:
+        type: integer
+        format: int64
+      descrizione_configurazione:
+        type: string
+      data:
+        type: string
+        format: date-time
+      valore:
+        type: string
+      note:
+        type: string
+  IscrizioneCollocamentoMirato:
+    type: object
+    properties:
+      idIscrizione:
+        type: integer
+        format: int64
+      dataIscrizione:
+        type: string
+        format: date-time
+      dataAnzianita:
+        type: string
+        format: date-time
+      numeroIscrizione:
+        type: string
+      provincia:
+        type: object
+        $ref: '#/definitions/Decodifica' 
+      cpi:
+        type: object
+        $ref: '#/definitions/Decodifica' 
+      idCpiSilp:
+        type: integer
+        format: int64
+      responsabileCpi:
+        type: string  
+      categoria:
+        type: string
+      gradoInvalidita:
+        type: string
+      percentualeInvalidita:
+        type: string  
+      dataStato:
+        type: string
+        format: date-time
+      stato:
+        type: object
+        $ref: '#/definitions/Decodifica'
+      statoFinale:
+        type: boolean
+      note:
+        type: string
+  Lingua:
+    type: object 
+    properties:
+      lingua:
+        $ref: "#/definitions/Decodifica"
+      letto:
+        $ref: "#/definitions/Decodifica"
+      scritto:
+        $ref: "#/definitions/Decodifica"
+      parlato:
+        $ref: "#/definitions/Decodifica"
+  ListaSpeciale:
+    type: object
+    properties:
+      tipo_lista:
+        type: integer
+        format: int64
+      descrizione_lista:
+        type: string  
+      data_iscrizione_lista:
+        type: string
+        format: date-time
+      data_termine_iscrizione:
+        type: string
+        format: date-time 
+      data_massimo_differimento:
+        type: string
+        format: date-time          
+      provincia:
+        $ref: '#/definitions/Provincia' 
+  Luogo:
+    type: object
+    properties:
+      comune:
+        type: object
+        $ref: "#/definitions/Comune"
+      stato:
+        type: object
+        $ref: "#/definitions/Nazione"
+  MenuHomeCard:
+    type: object
+    properties:
+      id_card:
+        type: string
+      titolo:
+        type: string
+      testo:
+        type: string
+      url_img:
+        type: string
+      icon:
+        type: string
+      link:
+        type: string
+      tipo_link:
+        type: string
+      cod_app:
+        type: string
+      flg_accesso_autenticato:
+        type: boolean
+  MenuHelpFile:
+    type: object
+    properties:
+      file_titolo:
+        type: string
+      file_url:
+        type: string
+      file_cod:
+        type: string
+  MenuHelpMsg:
+    type: object
+    properties:
+      titolo:
+        type: string
+      contenuto:
+        type: array
+        items:
+          type: string
+  MenuHelpVideo:
+    type: object
+    properties:
+      titolo:
+        type: string
+      codice:
+        type: string
+      contenuto:
+        type: array
+        items:
+          $ref: '#/definitions/MenuHelpFile'
+  MenuHelpPage:
+    type: object
+    properties:
+      id_page:
+        type: string
+      titolo:
+        type: string
+      messaggi:
+        type: array
+        items:
+          $ref: '#/definitions/MenuHelpMsg'
+      manuali:
+        type: array
+        items:
+          $ref: '#/definitions/MenuHelpFile'
+      video_tutorial:
+        type: array
+        items:
+          $ref: '#/definitions/MenuHelpVideo'
+  MenuItem:
+    type: object
+    description: la singola voce di menu
+    properties:
+      cod:
+        type: string
+        description: condice univoco dell'elemento
+      enabled:
+        type: boolean
+        description: true se il menu e' abilitato
+      visible:
+        type: boolean
+        description: true se il menu e' visibile
+      submenu:
+        type: array
+        items:
+          $ref: '#/definitions/MenuItem'
+  Messaggio:
+    type: object
+    properties:
+      id_messaggio:
+        type: integer
+        format: int64
+      cod_messaggio:
+        type: string
+      cod_tipo_messaggio:
+        type: string
+      cod_ambito:
+        type: string
+      intestazione:
+        type: string
+      testo:
+        type: string
+  MessaggioEsito:
+    type: object
+    properties:
+      codice_messaggio:
+        type: string
+      tipo_messaggio:
+        type: string
+      messaggio:
+        type: string
+  MotivoFamiliareACarico:
+    type: object
+    properties:
+      id_sil_motivo:
+        type: string
+      id_sil_grado_parentela:
+        type: string
+      descrizione:
+        type: string
+  MotivoPresenzaInItalia:
+    type: object
+    properties:
+      codice:
+        type: string
+      codice_silp:
+        type: integer
+        format: int64
+      descrizione:
+        type: string
+  MotivoRilascioPermessoSoggiorno:
+    type: object
+    properties:
+      vigore:
+        type: string
+        description: vigore
+      descrizione:
+        type: string
+        description: descrizione
+      id:
+        type: string
+        description: id
+  Nazione:
+    type: object
+    properties:
+      codice_ministeriale:
+        type: string
+        description: codice ministeriale
+      sigla:
+        type: string
+      descrizione:
+        type: string
+        description: descrizione
+      flag_ue:
+        type: boolean
+        description: true se la nazione e' europea
+  Operatore:
+    type: object
+    properties:
+      id_utente:
+        type: integer
+        format: int64
+        description: id utente su PSL
+      codice_tipo_utente:
+        type: string
+        description: codice tipo utente definito nella tabella PSLP_D_TIPO_UTENTE (APL, CIT, CPI)
+      codice_fiscale:
+        type: string
+        description: codice fiscale utente
+      nome:
+        type: string
+      cognome:
+        type: string
+      email:
+        type: string
+  Parametro:
+    type: object
+    properties:
+      id_parametro:
+        type: integer
+        format: int64
+        description: id parametro
+      cod_parametro:
+         type: string
+      descr_parametro:
+         type: string
+      valore_parametro:
+         type: string        
+      dt_inizio:
+        type: string
+        format: date-time
+        description: data inizio
+      dt_fine:
+        type: string
+        format: date-time
+        description: data fine 
+  ParametriDatoCalendari:
+    type: object
+    properties:
+      id_calendari:
+        type: array
+        items:
+          type: integer
+          format: int64
+      campo:
+        type: string
+      valore:
+        type: string
+  ParametriEccezioneCalendari:
+    type: object
+    properties:
+      id_calendari:
+        type: array
+        items:
+          type: integer
+          format: int64
+      id_eccezione:
+        type: integer
+        format: int64
+  ParametriCalcoloProfilingYG:
+    type: object
+    properties:
+      codice_silp_titolo_studio:
+        type: string
+      codice_silp_condizione_occupazionale:
+        type: integer
+        format: int64
+      codice_silp_presenza_in_italia:
+        type: integer
+        format: int64
+      codice_ministeriale_provincia:
+        type: string
+        description: codice ministeriale
+  ParametriDuplicazioneCalendario:
+    type: object
+    properties:
+      nome_calendario:
+        type: string
+      ambito:
+        type: string
+      gruppo_operatore:
+        type: string
+      codice_operatore:
+        type: integer
+        format: int64
+      subcodice:
+        type: integer
+        format: int64
+      duplica_fasce:
+        type: boolean
+      duplica_eccezioni:
+        type: boolean
+  ParametriDuplicazionePeriodo:
+    type: object
+    properties:
+      id_periodo:
+        type: integer
+        format: int64
+      data_a:
+        type: string
+        format: date-time
+      duplica_eccezione:
+        type: boolean
+  ParametriEliminazioneFascia:
+    type: object
+    properties:
+      id_fascia:
+        type: integer
+        format: int64
+  ParametriEliminazioneEccezione:
+    type: object
+    properties:
+      id_eccezione:
+        type: integer
+        format: int64
+  ParametriRicercaCalendari:
+    type: object
+    properties:
+      cod_ambito:
+        type: string
+      gruppo_operatore:
+        type: string
+      cod_operaratore:
+        type: integer
+        format: int64
+      subcodice:
+        type: integer
+        format: int64
+      data_da:
+        type: string
+        format: date-time
+      data_a:
+        type: string
+        format: date-time
+      nome_calendario:
+        type: string
+      calendario_eliminato:
+        type: boolean
+      cod_tipo_utente:
+        type: string
+        description: tipologia di utente CIT, APL, CPI, REG
+      id_eccezione_applicabile:
+        type: integer
+        format: int64
+        description: se valorizzato include nel risultato solo i calendari per cui questa eccezione sia valorizzabile
+  ParametriRicercaDisponibilitaIncontri:
+    type: object
+    properties:
+      data_da:
+        type: string
+      data_a:
+        type: string
+      cod_ambito:
+        type: string
+      gruppo_operatore:
+        type: string
+      cod_operaratore:
+        type: integer
+      subcodice:
+        type: integer
+  ParametriRicercaIncontriCalendario:
+    type: object
+    properties:
+      data_da:
+        type: string
+        format: date-time
+      data_a:
+        type: string
+        format: date-time
+  ParametriRicercaPrimaDisponibilitaIncontri:
+    type: object
+    properties:
+      cod_ambito:
+        type: string
+      gruppo_operatore:
+        type: string
+      cod_operaratore:
+        type: integer
+      subcodice:
+        type: integer
+  ParametriSalvataggioIncontro:
+    type: object
+    properties:
+      id_prenotazione:
+        type: integer
+        format: int64
+      id_prenotazione_old:
+        type: integer
+        format: int64
+      id_utente:
+        type: integer
+        format: int64
+      id_slot:
+        type: integer
+        format: int64
+      id_stato_appuntamento:
+        type: string
+      id_sil_rif_ambito:
+        type: integer
+        format: int64
+      note:
+        type: string
+  ParametriSalvataggioRedditoCollocamentoMirato:
+    type: object
+    properties:
+      idRedditoPerAnnullo:
+        type: integer
+        format: int64
+      motivoAnnullo:
+        type: string  
+      anno:
+        type: integer
+        format: int64
+      dataInserimento:
+        type: string
+        format: date-time
+      codiceProvincia:
+        type: string
+      valore:
+        type: string
+      note:
+        type: string   
+  ParametriSalvataggioSAP:
+    type: object
+    properties:
+      codice_ambito:
+        type: string
+      sap:
+        $ref: '#/definitions/SchedaAnagraficoProfessionale' 
+      sezioni:
+        type: array
+        items:
+          type: string
+  PermessoDiSoggiorno:
+    type: object
+    properties:
+      titolo:
+        type: string
+      numero:
+        type: string
+      data_scadenza:
+        type: string
+        format: date-time
+      motivo_rilascio:
+        type: string
+      codice_ministeriale_motivo_rilascio:
+        type: string
+      codice_ministeriale_status_extra_ue:
+        type: string
+  PoliticaAttiva:  
+    type: object 
+    properties:
+      attivita:
+        $ref: "#/definitions/Decodifica"
+        description: tabella ministeriale TIPO ATTIVITA es. A02 PATTO DI ATTIVAZIONE ED EVENTUALE PROFILING
+      denominazione:
+        type: string  
+      data_proposta:
+        type: string  
+        format: date
+      data_inizio:
+        type: string  
+        format: date
+      data_fine:
+        type: string  
+        format: date  
+      durata:
+        type: integer  
+      tipo_durata:
+        type: string
+        maxLength: 1
+        description: O ore, G giorni, M mesi, A anni 
+      descrizione:
+        type: string  
+      titolo_progetto:
+        $ref: "#/definitions/Decodifica"  
+        description: tabella ministeriale TIPO PROGETTI es. 02 GARANZIA GIOVANI
+      ente_promotore:
+        $ref: '#/definitions/Decodifica' 
+        description: tabella ministeriale CPI, rappresenta CPI o Societa' che ha fornito la politica
+      identificativo_politica:
+        type: string
+        maxLength: 11
+      identificativo_presa_in_carico:
+        type: string  
+        maxLength: 11
+      indice_profiling:
+        type: string  
+        maxLength: 11
+        description: numero decimale di lunghezza totale 10 con 9 decimali. Rappresento in stringa per comodita
+      ultimo_evento:
+        $ref: "#/definitions/EventoPolitica"    
+  PrenotazioneIncontro:
+    type: object
+    properties:
+      id_prenotazione:
+        type: integer
+        format: int64
+      cod_ambito:
+        type: string
+      codice_anpal_stato_incontro:
+        type: string
+      sportello:
+        type: object
+        $ref: "#/definitions/Sportello"
+      slot:
+        type: object
+        $ref: "#/definitions/SlotIncontro"
+  Privacy:
+    type: object
+    properties:
+      descr_ambito:
+        type: string
+      id_utente:
+        type: number
+      id_tutelato:
+        type: number
+      stato:
+        type: boolean
+      cod_ambito:
+        type: string
+      code_msg:
+        type: array
+        items:
+          type: string
+      data_presa_visione:  
+        type: string
+        format: date-time
+  ProfilingYG:
+    type: object
+    properties:
+      indice:
+        type: integer
+        format: int64
+      descrizione_indice:
+        type: string
+      data_profiling:
+        type: string
+        format: date-time
+      eta:
+        type: integer
+        format: int64
+      genere:
+        type: string
+      titolo_studio:
+        type: object
+        $ref: "#/definitions/TitoloStudio"
+      condizione_occupazionale:
+        type: object
+        $ref: "#/definitions/CondizioneOccupazionale"
+      motivo_presenza_in_italia:
+        type: object
+        $ref: "#/definitions/MotivoPresenzaInItalia"
+      codice_ministeriale_provincia:
+        type: string
+  Provincia:
+    type: object
+    properties:
+      codice_ministeriale:
+        type: string
+        description: codice ministeriale
+      targa:
+        type: string
+      descrizione:
+        type: string
+        description: descrizione
+      codice_regione_silp:
+        type: string  
+  Recapito:
+    type: object
+    properties:
+      telefono:
+        type: string
+      cellulare:
+        type: string
+      fax:
+        type: string
+      email:
+        type: string
+      web:
+        type: string
+      indirizzo:
+        type: object
+        $ref: "#/definitions/Indirizzo"
+  RedditoCollocamentoMirato:
+    type: object
+    properties:
+      idReddito:
+        type: integer
+        format: int64
+      anno:
+        type: integer
+        format: int64
+      dataInserimento:
+        type: string
+        format: date-time
+      fonte:
+        type: string
+      cpi:
+        type: object
+        $ref: '#/definitions/Decodifica' 
+      provincia:
+        type: object
+        $ref: '#/definitions/Decodifica' 
+      valore:
+        type: string
+      note:
+        type: string
+  Responsabile:
+    type: object
+    properties:
+      id_responsabile:
+        type: integer
+        format: int64
+        description: id responsabile==id utente
+      idSilTNazioneRes:
+        type: string
+        description: nazione di residenza
+      dsIndirizzoDom:
+        type: string
+        description: indirizzo di domicilio
+      dsFax:
+        type: string
+        description: fax
+      dsNumCivicoDom:
+        type: string
+        description: numero civico domicilio
+      idSilTComuneDom:
+        type: string
+        description: comune di domicilio
+      genere:
+        type: string
+        description: genere
+      capDom:
+        type: string
+        description: cap comune domicilio
+      dsIndirizzoRes:
+        type: string
+        description: indirizzo di residenza
+      idSilTComuneRes:
+        type: string
+        description: comune di residenza
+      dScadenzaPermSogg:
+        type: string
+        format: date-time
+        description: data scadenza permesso di soggiorno
+      idSilTCittadinanza:
+        type: string
+        description: citadinanza
+      idSilTProvinciaDom:
+        type: string
+        description: provincia di domicilio
+      idSilTToponimoDom:
+        type: string
+        description: toponimo di domicilio
+      idSilTProvinciaRes:
+        type: string
+        description: provincia di residenza
+      dNascita:
+        type: string
+        format: date-time
+        description: data di nascita
+      dsTelefonoCellulare:
+        type: string
+        description: telefono cellulare
+      dsIndirizzoResEsteso:
+        type: string
+        description: indirizzo di residenza esteso
+      idSilTComuneNasc:
+        type: string
+        description: comune di nascita
+      numeroPermSogg:
+        type: string
+        description: numero permesso di soggiorno
+      idSilTNazioneNasc:
+        type: string
+        description: nazione di nascita
+      capRes:
+        type: string
+        description: cap comune di residenza
+      dsTelefonoFisso:
+        type: string
+        description: telefono fisso
+      dsNumCivicoRes:
+        type: string
+        description: numero civico di residenza
+      idSilTStatusLavExtraUe:
+        type: string
+        description: status lavoratore extra UE
+      idSilTMotRilPerm:
+        type: string
+        description: motivo rilascio permesso di soggiorno
+      idSilTToponimoRes:
+        type: string
+        description: toponimo di residenza
+      dsIndirizzoDomEsteso:
+        type: string
+        description: indirizzo di domicilio esteso
+      idSilTNazioneDom:
+        type: string
+        description: nazione di domicilio
+  Role:
+    type: object
+    properties:
+      cod:
+        type: string
+      name:
+        type: string
+  SchedaAnagraficoProfessionale:
+    type: object
+    properties:
+      identificativo_sap:
+        type: string
+      id_sil_lav_anagrafica:
+        type: integer
+        format: int64
+        description: id lavoratore su SILP
+      id_interscambio_sap:
+        type: integer
+        format: int64
+        description: id del record di interscambio che traccia una sap ricevuta e importata da silp  
+      data_ultimo_aggiornamento:
+        type: string
+        format: date-time
+        description: data in cui e' avvenuto l'ultimo aggiornamento di un dato della sap  
+      ente_titolare:
+        $ref: "#/definitions/Decodifica" 
+      codice_fiscale:
+        type: string
+        description: codice fiscale utente
+      nome:
+        type: string
+      cognome:
+        type: string
+      sesso:
+        type: string
+      dataDiNascita:
+        type: string
+        format: date-time
+      luogoDiNascita:
+        $ref: "#/definitions/Luogo"
+      cittadinanza:
+        type: string
+      codice_ministeriale_cittadinanza:
+        type: string
+      residenza:
+        $ref: "#/definitions/Indirizzo"
+      domicilio:
+        $ref: "#/definitions/Indirizzo"
+      recapito:
+        $ref: "#/definitions/Recapito"
+      permessoDiSoggiorno:
+        $ref: "#/definitions/PermessoDiSoggiorno"
+      datiAmministrativi:
+        $ref: "#/definitions/DatiAmministrativi" 
+      esperienze_di_lavoro:
+        type: array
+        items:
+          $ref: "#/definitions/EsperienzaLavoro" 
+      titoli_di_studio:
+        type: array
+        items:
+          $ref: "#/definitions/TitoloDiStudio" 
+      formazione_professionale_corsi:
+        type: array
+        items:
+          $ref: "#/definitions/FormazioneProfessionale"    
+      lingue_straniere:
+        type: array
+        items:
+          $ref: "#/definitions/Lingua"  
+      conoscenze_informatiche:
+        type: array
+        items:
+          $ref: "#/definitions/ConoscenzaInformatica"  
+      albi:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica" 
+      patenti:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"  
+      patentini:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"   
+      politiche_attive:
+        type: array
+        items:
+          $ref: "#/definitions/PoliticaAttiva"  
+      esito:
+        $ref: '#/definitions/Esito'
+        description: esito valorizzato in caso di problemi logici nel caricamento sap, esempio codice sap duplicato    
+  Screen:
+    type: object
+    description: informazioni strutturali di una schermata, con abilitazioni
+    properties:
+      cod:
+        type: string
+        description: codice univoco dell'elemento
+      widgets:
+        type: array
+        description: elenco dei widget della schermata, con abilitazioni
+        items:
+          $ref: '#/definitions/Widget'
+  Sedime:
+    type: object
+    properties:
+      codice_ministeriale:
+        type: string
+        description: codice ministeriale
+      descrizione:
+        type: string
+        description: descrizione
+  SlotIncontro:
+    type: object
+    properties:
+      id_slot:
+        type: integer
+        format: int64
+      giorno:
+        type: string
+      da_ora:
+        type: string
+      a_ora:
+        type: string
+      disponibilita:
+        type: integer
+      numero_prenotazioni_massimo:
+        type: integer
+      numero_prenotazioni_valide:
+        type: integer
+      flag_eccezione:
+        type: boolean
+  Sportello:
+    type: object
+    properties:
+      gruppo_operatore:
+        type: string
+      cod_operatore:
+        type: integer
+        format: int64
+      subcodice:
+        type: integer
+        format: int64
+      codice_ministeriale_comune:
+        type: string
+      codice_intermediario:
+        type: string
+      descrizione:
+        type: string
+      descrizione_indirizzo:
+        type: string
+      gruppo_operatore_ente_appartenenza:
+        type: string
+      cod_operatore_ente_appartenenza:
+        type: integer
+        format: int64
+      subcodice_ente_appartenenza:
+        type: integer
+        format: int64
+  StatoIncontro:
+    type: object
+    properties:
+      codice:
+        type: string
+      codice_silp:
+        type: string
+      descrizione:
+        type: string
+      data_inizio:
+        type: string
+      data_fine:
+        type: string
+      stato_finale:
+        type: boolean
+  StatusExtraUE:
+    type: object
+    properties:
+      codice_ministeriale:
+        type: string
+        description: codice ministeriale
+      descrizione:
+        type: string
+        description: descrizione
+      id_tipo_documento_soggiorno:
+        type: string
+        description: id tipo documento soggiorno
+      data_inizio:
+        type: string
+        format: date-time
+        description: data inizio
+      data_fine:
+        type: string
+        format: date-time
+        description: data fine
+  TipoConoscenzaInformatica:
+    type: object
+    properties:
+      codice_ministeriale:
+        type: string
+      codice_silp:
+        type: string
+      descrizione:
+        type: string 
+      data_inizio_validita:  
+        type: string
+        format: date-time
+      data_fine_validita:  
+        type: string
+        format: date-time
+      codice_categoria_conoscenza_informatica:
+        type: string
+  TipoContratto:  
+    type: object
+    properties:
+      codice_ministeriale:
+        type: string
+      codice_silp:
+        type: string
+      descrizione:
+        type: string 
+      data_inizio_validita:  
+        type: string
+        format: date-time
+      data_fine_validita:  
+        type: string
+        format: date-time
+      codice_tipo_lavoro:
+        type: string
+        description: rappresenta la categoria S subordinato, A autonomo, R speciale
+      ammissibile_legge_68:
+        type: boolean
+        description: indica se il tipo lavoro e' ammesso per legge 68
+      ammissibile_missione:
+        type: boolean
+        description: indica se il tipo lavoro ammette la missione  
+      ammissibile_mobilita:
+        type: boolean
+        description: indica se il tipo di lavoro e' ammissibile pe mobilita'
+      ammissibile_stagionale:
+         type: boolean
+         description: indica se il tipo di lavoro e' ammissibile come stagionale
+      ammissibile_agricoltura:
+         type: boolean
+         description: indica se il tipo di lavoro e' ammissibile per agricoltura
+      ammissibile_forma_TD:
+         type: boolean
+         description: indica se il tipo di lavoro ammette come forma il tempo determinato  
+      ammissibile_forma_TI:
+         type: boolean
+         description: indica se il tipo di lavoro ammette come forma il tempo indeterminato 
+  TipoDocumento:
+    type: object
+    properties:
+      codice:
+        type: string
+        description: codice
+      descrizione:
+        type: string
+        description: descrizione
+      mime_type:
+        type: array
+        items:
+          $ref: '#/definitions/TipoDocumentoMimeType'
+      flg_obbligatorio:
+        type: string
+        description: flg di obbligatorieta
+  TipoDocumentoMimeType:
+    type: object
+    properties:
+      codice_estensione:
+        type: string
+      descrizione_estensione:
+        type: string
+      descrizione_mime_type:
+        type: string
+  TipoResponsabilita:
+    type: object
+    properties:
+      codice:
+        type: string
+      descrizione:
+        type: string
+  TitoloDiStudio:  
+    type: object 
+    properties:
+      livello_scolarizzazione:
+        $ref: "#/definitions/GradoStudio" 
+        description: da tabella ministeriale LIVELLO DI STUDIO, 2 caratteri es. 20 SCUOLA MEDIA 
+      corso_di_studio:  
+        $ref: "#/definitions/Decodifica"
+        description: da tabella ministeriale TDS completa con indici, 8 caratteri  es. 30101005  Esperto agrumicoltore
+      descrizione: 
+        type: string  
+      frequentato_in:  
+        $ref: "#/definitions/Luogo"
+      riconosciuto_in_italia: 
+        type: boolean
+      anno_se_conseguito:
+        type: integer
+      votazione_conseguita: 
+        type: string
+      ultimo_anno_frequentato_se_non_conseguito:
+        type: integer
+      anno_di_frequenza_se_in_corso:
+        type: integer  
+  TitoloStudio:
+    type: object
+    properties:
+      codice:
+        type: string
+      codice_silp:
+        type: string
+      descrizione:
+        type: string
+      descrizioneTipoScuola:
+        type: string  
+      sinonimo:
+        type: string  
+      gradoStudio:
+        $ref: "#/definitions/GradoStudio"  
+  UseCase:
+    type: object
+    properties:
+      cod:
+        type: string
+      name:
+        type: string
+  UserInfo:
+    type: object
+    properties:
+      nome:
+        type: string
+        description: nome dell'utente
+      cognome:
+        type: string
+        description: cognome dell'utente
+      codFisc:
+        type: string
+        description: codice fiscale dell'utente
+      ente:
+        type: string
+        description: nome dell'ente
+      ruolo:
+        type: string
+        description: nome del ruolo dell'utente
+      cod_ruolo:
+        type: string
+        description: codice del ruolo dell'utente
+      livAuth:
+        type: integer
+        description: livello di autenticazione utilizzato per accedere
+      community:
+        type: string
+        description: community di utenti utilizzata per accedere
+  Utente:
+    type: object
+    properties:
+      id_utente:
+        type: integer
+        format: int64
+        description: id utente su PSL
+      id_sil_lav_anagrafica:
+        type: integer
+        format: int64
+        description: id lavoratore su SILP
+      identificativoSap:
+        type: string
+      codice_tipo_utente:
+        type: string
+        description: codice tipo utente definito nella tabella PSLP_D_TIPO_UTENTE (APL, CIT, CPI)
+      codice_fiscale:
+        type: string
+        description: codice fiscale utente
+      nome:
+        type: string
+      cognome:
+        type: string
+      email:
+        type: string
+      prese_visione:
+        type: array
+        items:
+          $ref: "#/definitions/UtentePresaVisione" 
+  UtenteACarico:
+    type: object
+    properties:
+      tutelato:
+        $ref: "#/definitions/Utente"
+      tipo_responsabilita:
+        $ref: "#/definitions/TipoResponsabilita"
+      prese_visione:
+        type: array
+        items:
+          $ref: "#/definitions/UtentePresaVisione" 
+  UtenteRiepilogoIscrizione:
+    type: object
+    properties:
+      utente:
+        $ref: "#/definitions/Utente"
+      tipo_responsabilita:
+        $ref: "#/definitions/TipoResponsabilita"
+      prese_visione:
+        type: array
+        items:
+          $ref: "#/definitions/UtentePresaVisione"
+      dati:
+        type: object
+        $ref: '#/definitions/ControlliIscrizione'
+  ControlliIscrizione:
+    type: object
+    properties:
+      sap:
+        type: object
+        $ref: '#/definitions/SchedaAnagraficoProfessionale'
+      adesione:
+        type: object
+        $ref: '#/definitions/AdesioneYG'
+      adesioneFuoriRegione:
+        type: boolean
+      appuntamento:
+        type: object
+        $ref: "#/definitions/PrenotazioneIncontro"
+      eta:
+        type: integer 
+      soggetto_idoneo:
+        type: boolean      
+      presente_privacy:
+        type: boolean
+      domicilio_piemonte:
+        type: boolean
+      residenza_italia:
+        type: boolean
+      eta_coerente:
+        type: boolean
+      maggiorenne:
+        type: boolean
+      messaggi:
+        type: array
+        items:
+          type: string
+      possibileIscrizione:
+        type: boolean
+      possibileAnnullamento:
+        type: boolean
+      possibileStampa:
+        type: boolean
+      possibileAppuntamento:
+        type: boolean
+  UtentePresaVisione:
+    type: object
+    properties:
+      cod_ambito:
+        type: string
+  Ufficio:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: id ufficio
+      nome:
+        type: string
+      indirizzo:
+        type: string
+      tipo:
+        type: string
+      latitudine:
+        type: number
+        format: float
+      longitudine:
+        type: number
+        format: float
+      codice provincia:
+        type: string
+      provincia:
+        type: string
+      orario:
+        type: array
+        items:
+          type: string
+  
+  DatiProfilingDid:
+    type: object
+    description: dati profiling
+    properties:
+      eta:
+        type: integer
+      data_inserimento:
+        type: string
+        format: date-time
+        description: data inserimento
+      data_did:
+        type: string
+        format: date-time
+        description: data did
+      data_disoccupazione:
+        type: string
+        format: date-time
+        description: data disoccupazione profiling
+      flg_figli_carico:
+        type: string
+      flg_figli_carico_minori:
+        type: string
+      flg_genere:
+        type: string
+      flg_ha_avuto_lavoro:
+        type: string
+      ds_cittadinanza:
+        type: string
+      ds_titolo_studio:
+        type: string
+      codice_ministeriale_titolo_studio:
+        type: string
+      ds_condizione_occupazionale:
+        type: string
+      num_mesi_ultimo_rapporto:
+        type: integer
+      num_mesi_ricerca_lavoro:
+        type: integer
+      num_componenti_famiglia:
+        type: integer
+      ds_iscrizione_corsi:
+        type: string
+      ds_provincia_residenza:
+        type: string
+      ds_presenza_in_italia:
+        type: string
+      ds_posizione_professionale:
+        type: string
+      indice_profiling:
+        type: string  
+        maxLength: 11
+        description: numero decimale di lunghezza totale 10 con 9 decimali. Rappresento in stringa per comodita (preso da PoliticaAttiva)
+  EsitoDettaglioDid:
+    type: object
+    description: esito ricerca dettaglio Dichiarazione Immediata Disponibilita
+    properties:
+      id_did:
+        type: integer
+        format: int64
+        description: id DID
+      data_did:
+        type: string
+        format: date-time
+        description: data did
+      flg_rifiuto:
+        type: string
+      motivo_rifiuto:
+        type: string
+      flg_ente_titolarita_piemontese:
+        type: string
+      ente_titolarita:
+        type: string
+      flg_rapporto_lavoro_aperto:
+        type: string
+      flg_percettore:
+        type: string
+      flg_rapporto_lavoro_chiuso:
+        type: string
+      cod_ultimo_stato:
+        type: string
+        description: codice ultimo stato
+      flg_stato_finale:
+        type: string
+      flg_attesa_invio:
+        type: string
+        description: S conferito , null o N non conferito
+      data_stato:
+        type: string
+        format: date-time
+        description: data ultimo stato
+      data_did_respinta:
+        type: string
+        format: date-time
+        description: data did respinta
+      dati_profiling_did:
+        $ref: '#/definitions/DatiProfilingDid' 
+      errore_ricerca_did:
+        $ref: '#/definitions/ErrorDef'
+      contenuto:
+        type: array
+        items:
+          $ref: '#/definitions/ConfigurazioneRisposta'
+      error:
+        type: array
+        items:
+          type: string
+      info:
+        type: array
+        items:
+          type: string
+      warning:
+        type: array
+        items:
+          type: string
+  Widget:
+    type: object
+    description: il singolo widget
+    properties:
+      cod:
+        type: string
+        description: codice univoco dell'elemento
+      enabled:
+        type: boolean
+        description: true se il widget e' abilitato
+      visible:
+        type: boolean
+        description: true se il widget e' visibile
+  DomandaDidMsg:
+    type: object
+    properties:
+      descr_domanda:
+        type: string
+      codice:
+        type: string
+      lista_risposte:
+        type: array
+        items:
+          $ref: '#/definitions/RispostaDidMsg'
+  DomandeDidPage:
+    type: object
+    properties:
+      domanda:
+        type: array
+        items:
+          $ref: '#/definitions/DomandaDidMsg'
+  RispostaDidMsg:
+    type: object
+    properties:
+      descr_risposta:
+        type: string
+      valore:
+        type: string
+  DatiInputProfilingDid:
+    type: object
+    properties:
+      id_anagrafica:
+        type: integer
+        format: int64
+      codice_fiscale:
+        type: string
+      id_titolo_studio:
+        type: string
+      id_condizione_occupazionale:
+        type: string
+      id_posizione_professionale:
+        type: string
+      id_iscrizione_corsi:
+        type: string
+      id_presenza_in_italia:
+        type: string
+      avuto_almeno_un_lav:
+        type: boolean
+      figli_a_carico:
+        type: boolean
+      figli_minori_a_carico:
+        type: boolean
+      num_mesi_fine_ultimo_lavoro:
+        type: integer
+        format: int64  
+      num_mesi_ricerca_lavoro:
+        type: integer
+        format: int64  
+      num_componenti_famiglia:
+        type: integer
+        format: int64
+  RispostaQuestionario:
+    type: object
+    properties:
+      id_domanda:
+        type: integer
+        format: int64
+      id_risposta:
+        type: integer
+        format: int64
+      id_configurazione_questionario:
+        type: integer
+        format: int64
+      risposta_libera:
+        type: string
+  DatiInputAggiornamentoDid:
+    type: object
+    properties:
+      id_anagrafica:
+        type: integer
+        format: int64
+      id_did:
+        type: integer
+        format: int64
+      cod_stato_did:
+        type: string
+      codice_fiscale:
+        type: string
+      data_did:
+        type: string
+        format: date-time
+        description: data did
+      data_stato_did:
+        type: string
+        format: date-time
+        description: data stato did
+      risposta_questionario:
+        type: array
+        items:
+           $ref: '#/definitions/RispostaQuestionario'
+  ConfigurazioneRisposta:
+    type: object
+    properties:
+      id_risposta:
+        type: integer
+        format: int64
+      id_domanda:
+        type: integer
+        format: int64
+      posizione:
+        type: integer
+        format: int64
+      id_domanda_successiva:
+        type: integer
+        format: int64
+      id_configurazione_questionario:
+        type: integer
+        format: int64
+      risposta:
+        type: string
+  ConfigurazioneDomanda:
+    type: object
+    properties:
+      id_configurazione_questionario:
+        type: integer
+        format: int64
+      id_domanda:
+        type: integer
+        format: int64
+      tipo_domanda:
+        type: string
+      domanda:
+        type: string
+      posizione:
+        type: integer
+        format: int64
+      risposte:
+        type: array
+        items:
+           $ref: '#/definitions/ConfigurazioneRisposta'
+  ConfigurazioneQuestionario:
+    type: object
+    properties:
+      id_configurazione_questionario:
+        type: integer
+        format: int64
+      nome_questionario:
+        type: string
+      configurazione_domanda:
+        type: array
+        items:
+           $ref: '#/definitions/ConfigurazioneDomanda'
+  EsitoRiepilogoIscrizione:
+    type: object
+    properties:
+      messaggio_errore:
+        type: string
+      messaggio_eta_non_coerente:
+        type: string
+      id_utente:
+        type: integer
+        format: int64 
+        description: id utente 
+      utente_tutore:
+        type: object
+        $ref: "#/definitions/UtenteRiepilogoIscrizione"
+      tutelati:
+        type: array
+        items:
+           $ref: '#/definitions/UtenteRiepilogoIscrizione'
+  MappaErrori:
+    type: object
+    properties:
+      codice_messaggio:
+        type: string
+      descr_messaggio:
+        type: string
+  RichiestaIscrizioneL68Header:
+    type: object
+    properties:
+      id_richiesta:
+        type: integer
+        format: int64 
+        description: id richiesta
+      id_anagrafica:
+        type: integer
+        format: int64 
+        description: id richiesta  
+      cod_stato_richiesta:
+        type: string
+        description: B = Bozza - I = Inviato - A = Accettata - R = Rifiutata - O = Annullato da Operatore
+      data_stato:
+        type: string
+        format: date-time
+        description: data stato richiesta
+      codice_fiscale:
+        type: string
+        description: codice fiscale utente
+      cognome:
+        type: string
+      nome:
+        type: string
+      descr_provincia:
+        type: string
+      descr_tipo_iscrizione:
+        type: string
+      descr_tipo_comunicazione:
+        type: string
+      descr_stato_richiesta_iscrizione:
+        type: string
+      descr_cpi:
+        type: string
+      descr_cpi_ultima_iscrizione:
+        type: string
+      flg_presa_in_carico:
+        type: string
+      descr_operatore_presa_in_carico:
+        type: string
+      descr_motivo_richiesta:
+        type: string
+      descr_categoria_invalidita:
+        type: string
+      codice_fiscale_operatore:
+        type: string
+        description: codice fiscale operatore
+      cognome_operatore:
+        type: string
+      nome_operatore:
+        type: string
+  VerbaleL68:
+    type: object
+    properties:
+      data_emissione:
+        type: string
+        format: date-time
+        description: data emissione
+      flg_soggetto_a_revisione:
+        type: string
+      data_prossima_revisione:
+        type: string
+        format: date-time
+        description: data prossima revisione
+  ReferenteServizioTerritoriale:
+    type: object
+    properties:
+      cognome_referente:
+        type: string
+      nome_referente:
+        type: string
+      ente_referente:
+        type: string
+      email_referente:
+        type: string
+      telefono_referente:
+        type: string
+      cellulare_referente:
+        type: string
+  IscrizioneL68:
+    type: object
+    properties:
+      id_iscrizione:
+        type: integer
+        format: int64 
+        description: id iscrizione
+      data_iscrizione:
+        type: string
+        format: date-time
+        description: Data iscrizione
+      data_anzianita:
+        type: string
+        format: date-time
+        description: Data anzianita
+      cod_stato_iscrizione:
+        type: string 
+        description:  codice stato iscrizione
+      descr_stato_iscrizione:
+        type: string 
+        description:  descrizione stato iscrizione
+      num_iscrizione_provinciale:
+        type: integer
+        format: int64 
+        description: num iscrizione provinciale
+  DettaglioRichiestaIscrizioneL68:
+    type: object
+    properties:
+      richiesta_iscrizione_header:
+        type: object
+        $ref: "#/definitions/RichiestaIscrizioneL68Header"
+      tipo_operazione:
+        type: string 
+        description: tipo operazione I = Inserimento se CALLER PSLP - A = Aggiornamento se CALLER PSLP o SILP - N = Annullamento logico se CALLER PSLP - O = Annullamento logico se CALLER SILP
+      cod_tipo_iscrizione:
+        type: string 
+        description: cod tipo iscrizione   A = Altre Categorie Protette   -   D = Disabili
+      cod_motivo_richiesta:
+        type: string 
+        description: cod motivo richiesta   L	Ricerca Lavoro - O	Gia' Occupato
+      cod_categoria_appartenenza:
+        type: string 
+        description: Se cod tipo iscrizione A da valori da tab SIL_T_CAT_PROTETTA (01,02...)  -     Se D da tab. SIL_T_CATEG_PROTETTA_DISAB (1,2,3,4,5)
+      cod_tipo_comunicazione:
+        type: string 
+        description:  P	  Prima Iscrizione -  I	 Iscrizione successiva -  T	Trasferimento
+      id_cpi:
+        type: integer
+        format: int64
+      id_provincia:
+        type: string
+      id_cpi_ultima_iscrizione:
+        type: integer
+        format: int64
+      data_ultima_iscrizione:
+        type: string
+        format: date-time
+        description: Data dell'ultima iscrizione
+      data_annullo:
+        type: string
+        format: date-time
+        description: Data annullo
+      id_provincia_ultima_iscrizione:
+        type: string
+      descr_provincia_ultima_iscrizione:
+        type: string
+      domicilio_trasferimento:
+        type: object
+        $ref: "#/definitions/Indirizzo"  
+      grado_invalidita:
+        type: integer
+        format: int64 
+      cod_categoria_invalidita:
+        type: integer
+        format: int64 
+      elenco_qualifica_non_vedenti:
+        type: array
+        items:
+          $ref: "#/definitions/Decodifica"
+      verbale_collocamento_mirato:
+        type: object
+        $ref: "#/definitions/VerbaleL68"
+      verbale_invalidita_civile:
+        type: object
+        $ref: "#/definitions/VerbaleL68"
+      flg_autorizzazione_cpi_prenotazione_visita_collocamento_mirato:
+        type: string
+      flg_seguito_da_servizi_territoriali:
+        type: string
+      referente_servizi_territoriali:
+        type: object
+        $ref: "#/definitions/ReferenteServizioTerritoriale"
+      flg_licenziato_in_ultimo_rapporto:
+        type: string
+      anno_reddito:
+        type: integer
+        format: int64
+      importo_reddito:
+        type: string
+      note_reddito:
+        type: string
+      anno_riferimento_familiari_a_carico:
+        type: integer
+        format: int64
+      numero_familiari_a_carico:
+        type: integer
+        format: int64
+      elenco_familiari_a_carico:
+        type: array
+        items:
+           $ref: '#/definitions/DettaglioDichiarazioneFamiliariACarico'
+      note:
+        type: string
+      elenco_allegati:
+        type: array
+        items:
+           $ref: '#/definitions/Documento'   
+      id_operatore_presa_in_carico:
+        type: string
+      data_invio:
+        type: string
+        format: date-time
+        description: Data invio
+      note_rifiuto:
+        type: string
+      iscrizione_legge68:
+        type: object
+        $ref: "#/definitions/IscrizioneL68"
+      elencoCheckList:
+        type: array
+        items:
+           $ref: '#/definitions/MessaggioEsito'
+      data_inserimento:
+        type: string
+        format: date-time
+        description: Data inserimento
+      data_aggiornamento:
+        type: string
+        format: date-time
+        description: Data aggiornamento
+      riepilogHtml:
+        type: string
+      flg_prima_iscrizione:
+        type: string
+        description: flg per indicare che si tratta di una prima iscrizione
+      flg_dichiarazione_visita_revisione_collocamento_mirato:
+        type: string
+        description: flg per indicare che esiste un codice per la dichiarazione 
+      cod_dichiarazione_visita_revisione_invalidita_civile:
+        type: string
+        description: codice dichiarazione visita revisione invalidita civile
+  EsitoRicercaRichiestaIscrizioneCollocamentoMirato:
+    type: object
+    properties:
+      elencoRichieste:
+        type: array
+        items:
+           $ref: '#/definitions/RichiestaIscrizioneL68Header' 
+      dettaglio:
+        type: object
+        $ref: "#/definitions/DettaglioRichiestaIscrizioneL68"
+  EsitoSaveRichiestaIscrizioneCollocamentoMirato:
+    allOf:     # Combines the EsitoSilp  
+      - type: object
+        properties:
+          richiesta:
+            type: object
+            $ref: "#/definitions/DettaglioRichiestaIscrizioneL68"
+      - $ref: '#/definitions/EsitoSilp'
+  EsitoSilp:
+    type: object
+    properties:
+      esitoPositivo:
+        type: boolean
+      messaggioCittadino:
+        type: string            
+      messaggioErrori:
+        type: string            
+      messaggioInfo:
+        type: string            
+      messaggioWarning:
+        type: string            
+      header:
+        type: string
+      error:
+        type: array
+        items:
+           $ref: '#/definitions/MappaErrori'
+      info:
+        type: array
+        items:
+           $ref: '#/definitions/MappaErrori'
+      warning:
+        type: array
+        items:
+           $ref: '#/definitions/MappaErrori'

@@ -1,0 +1,117 @@
+<!-- ##################################################### -->
+<!-- # Copyright Regione Piemonte - 2021                 # -->
+<!-- # SPDX-License-Identifier: EUPL-1.2-or-later        # -->
+<!-- ##################################################### -->
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.4"
+         xmlns="http://java.sun.com/xml/ns/j2ee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
+         http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+
+	<context-param>
+        <param-name>contextClass</param-name>
+        <param-value>org.springframework.web.context.support.AnnotationConfigWebApplicationContext</param-value>
+    </context-param>
+    
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>it.csi.pslp.pslweb.util.SpringConfig</param-value>
+    </context-param>
+    <context-param>
+        <param-name>cachePreloadListenerSkip</param-name>
+        <param-value>@@@CACHEPRELOADLISTENER.SKIP@@@</param-value>
+    </context-param>
+	<listener>
+		<listener-class>it.csi.pslp.pslweb.util.listener.AppServletContextListener</listener-class>
+	</listener>
+	<listener>
+		<listener-class>it.csi.pslp.pslweb.util.listener.CachePreloadServletContextListener</listener-class>
+	</listener>
+	<listener>
+		<listener-class>org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap</listener-class>
+	</listener>
+	<listener>
+		<listener-class>org.jboss.resteasy.plugins.spring.SpringContextLoaderListener</listener-class>
+	</listener>
+
+ <!-- 	<listener>
+    	<listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
+   	</listener> -->
+
+   <!-- filtro di protezione ad attacchi XSRF -->
+   <filter>
+		<filter-name>XSRFProtectionFilter</filter-name>
+		<filter-class>it.csi.pslp.pslweb.filter.XSRFProtectionFilter</filter-class>
+		<init-param>
+    		<param-name>disabled</param-name>
+    		<param-value>@@@XSRFFILTER.DISABLED@@@</param-value>
+  		</init-param>
+  		<init-param>
+    		<param-name>publicPath</param-name>
+    		<param-value>@@@XSRFFILTER.PUBLIC_PATH@@@</param-value>
+  		</init-param>
+   </filter>
+   <filter-mapping>
+		<filter-name>XSRFProtectionFilter</filter-name>
+		<url-pattern>*</url-pattern>
+   </filter-mapping>
+   	
+	<!-- Filtro per refresh su Angular -->
+   <filter>
+		<filter-name>AngularFilter</filter-name>
+		<filter-class>it.csi.pslp.pslweb.filter.AngularFilter</filter-class>
+		<init-param>
+    		<param-name>backendUrl</param-name>
+    		<param-value>/restfacade/</param-value>
+  		</init-param>
+		<init-param>
+    		<param-name>indexUrl</param-name>
+    		<param-value>/index.html</param-value>
+  		</init-param>
+   </filter>
+   <filter-mapping>
+		<filter-name>AngularFilter</filter-name>
+		<url-pattern>*</url-pattern>
+   </filter-mapping>
+	
+
+
+  
+  
+ <!-- filtro di recepimento token autenticazione -->
+ <filter>
+		<filter-name>IrideIdAdapterFilter</filter-name>
+		<filter-class>it.csi.pslp.pslweb.filter.IrideIdAdapterFilter</filter-class>
+		<init-param>
+    		<param-name>devmode</param-name>
+    		<param-value>@@@IDADAPTERFILTER.DEVMODE@@@</param-value>
+  		</init-param>
+   </filter>
+   <filter-mapping>
+		<filter-name>IrideIdAdapterFilter</filter-name>
+		<url-pattern>*</url-pattern>
+   </filter-mapping>
+ <filter>
+	    <filter-name>CorsFilter</filter-name>
+	    <filter-class>it.csi.pslp.pslweb.filter.CorsFilter</filter-class>
+	    <init-param>
+    		<param-name>enablecors</param-name>
+    		<param-value>@@@CORSFILTER.ENABLECORS@@@</param-value>
+  		</init-param>
+	</filter> 
+	<filter-mapping>
+	    <filter-name>CorsFilter</filter-name>
+	    <url-pattern>/*</url-pattern>
+	</filter-mapping>
+ 
+ 	<context-param> 
+        <param-name>resteasy.providers</param-name> 
+        <param-value>it.csi.pslp.pslweb.business.be.JacksonConfig</param-value>
+    </context-param>
+ 
+  <!-- replica della sessione (pur essendo i servizi stateless, serve per replicare il contesto 
+       di autenticazione e il token xsrf, quindi e' necessario solo nello scenario SPA-REST -->
+  <!--  <distributable />  -->
+	
+</web-app>

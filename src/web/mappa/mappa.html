@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<!-- ##################################################### -->
+<!-- # Copyright Regione Piemonte - 2021                 # -->
+<!-- # SPDX-License-Identifier: EUPL-1.2-or-later        # -->
+<!-- ##################################################### -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- BOOTSTRAP 4 CSS-->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- BOOTSTRAP 4 JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <!-- Leaflet css -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin="" />
+
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js" integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og==" crossorigin=""></script>
+
+    <!-- FONT AWSOME -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Open+Sans" />
+
+    <style>
+        * {box-sizing: border-box; }
+		body{font-family: 'Open Sans', sans-serif;}
+        #mapOfTheDom { min-height: 550px; min-width: 500px; margin: 0;}
+        #sideInfo { background-color: #f2f2f2; margin: 0 0 40px 0;}
+        div#tb > h6 { margin-left: 2%;}
+		select {
+			font-family: inherit;
+			background-color: transparent;
+			width: 100%;
+			padding: 10px 10px 10px 0px;
+			color: rgba(0,0,0, 1);
+			border: none;
+			border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+			border-radius: 0 !important;
+		}
+
+		.header-title {
+			background: #178CD6;
+			color: #fff;
+			margin-bottom: 40px;
+		}
+		.header-title h1 {
+			font-size: 22px;
+			color: #fff;
+			padding:32px 20px;
+			margin: 0;
+			font-weight: bold;
+		}
+
+		@media (max-width: 767.98px){
+			.header-title h1 {
+			padding: 12px 20px;
+			}
+		}
+        @media (min-width: 992px) {
+            #mapOfTheDom{
+                min-width: 500px;
+                height: 85vh;
+            }
+        }
+
+	
+		@media (max-width: 991.98px){
+		    #mapOfTheDom{margin-bottom:20px;}
+			#mapOfTheDom{
+                min-width: 400px;
+            }
+		}
+		@media (max-width: 475.98px){
+			#mapOfTheDom{
+                min-width: 300px;
+            }
+		}
+		@media (max-width: 450.98px){
+			#mapOfTheDom{
+                min-width: 250px;
+            }
+		}
+
+    </style>
+
+    <title>Document</title>
+</head>
+<body>
+    <header class="mb-4">	
+		<div class="header-title"><div class="container-fluid"><div class="row"><div class="col-lg-12"><h1>Trova CpI &amp; Sportelli Piemonte</h1></div></div></div></div>
+    </header>
+    <div class="col-12 mt-0 fmmc">
+        <div class="container-fluid">
+            <!--div class="nav-bar mb-3 mt-3"></div-->
+            <div class="row">
+                <div class="col-md-12 col-lg-3">
+                    <div class="mb-3" id="search">
+                        <select id="cercaPerProvincia">
+                            <option value="scegli">Seleziona la provincia desiderata</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="search">
+                        <select id="cercaCPI">
+                            <option value="scegli">Seleziona la sede desiderata</option>
+                        </select>
+                    </div>
+                    <aside id="sideInfo">
+                        <div id="th">
+                            <h5 id="nome" class="m-2 pl-2 pt-2 font-weight-bold"></h5>
+                        </div>
+                        <div class="ml-3" id="tb">
+                            <div class="row" >
+                                <h6 class="col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pt-1" id="indirizzo"></h6>
+                            </div>
+                            <div class="row" >
+                                <h6 class="col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pt-1" id="provincia"></h6>
+                            </div>
+                            <div class="row" >
+                                <h6 class="col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pt-1" id="telefono"></h6>
+                            </div>
+                            <div class="row" >
+                                <h6 class="col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pt-1" id="orario"></h6>
+                            </div>
+                            <div class="row font-italic" >
+                                <h6 class="col-xs-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 pt-1" id="mail"></h6>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+				<div class="col-md-12 col-lg-9">
+                    <div id="mapOfTheDom"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="./config.js"></script>
+
+<script>
+
+    var arrSediSelect = [];
+    var arrMarcatori = [];
+    var arrMarkerLayer = [];
+    var markerArray = [];
+    var markerMAP = {};
+    var mappaPerProvincia = {};
+    var overlayObj = {};
+    var layerByProvince = {};
+    var marcatore = {}
+
+    //prendo possesso degli elementi del DOM
+    var selectCPI = document.getElementById('cercaCPI');
+    var sideInfo = document.getElementById('sideInfo');
+    var cercaPerProvincia = document.getElementById('cercaPerProvincia');
+    var nomeCPI = document.getElementById('nome');
+    var indirizzoCPI = document.getElementById('indirizzo');
+    var provinciaCPI = document.getElementById('provincia');
+    var telefonoCPI = document.getElementById('telefono');
+    var mailCPI = document.getElementById('mail');
+    var orarioCPI = document.getElementById('orario');
+    var arrTextElement = [nomeCPI, indirizzoCPI, provincia, telefonoCPI, orario, mailCPI]
+
+    //dichiarazione del titleLayer della mappa
+    var baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+    });
+
+    //dichiarazione della mappa
+    var mymap = L.map('mapOfTheDom', {
+        center: [45.215,7.949],
+        zoom: 8,
+        layers : [baseLayer]
+    });
+
+    //dichiarazione del featureGroup
+    var markersLayer = L.featureGroup(arrMarkerLayer);
+
+    //TODO implementare una soluzione che chiami solo una volta il fetch
+    //in mdo che eviti la chiamata quando non necessaria fetch
+    $.get(urlServizioIndirizzi)
+    .done(creaPuntatori)
+    .fail(function(error) {
+        console.log('Error', error);
+    });
+
+    markersLayer.addTo(mymap);
+
+    markersLayer.on("click", function (event) {
+        var clickedMarker = event.layer;
+        setFocus(clickedMarker.getLatLng(), clickedMarker.sede);
+    });
+
+    function creaPuntatori(data){
+        $.each(data, function(idx, sede) {
+            markerMAP[''+sede.nome] = sede;
+            //creo il marcatore aggiungendolo alla mappa e poi assegnandogli il popup
+            var mkLayer = L.marker([sede.latitudine, sede.longitudine]);
+            //passo una proprieta custom al mio oggetto
+            mkLayer.sede = sede;
+            markersLayer.addLayer(mkLayer);
+
+            //PROVINCIA
+            if(!mappaPerProvincia.hasOwnProperty(sede.provincia)){
+                mappaPerProvincia[sede.provincia] = L.featureGroup();
+            }
+
+            //se la provincia e' presente includo la sede al set
+            if(mappaPerProvincia.hasOwnProperty(sede.provincia) && !mappaPerProvincia[sede.provincia]._layers.hasOwnProperty(mkLayer)){
+                mappaPerProvincia[sede.provincia].addLayer(mkLayer);
+            }
+            //
+
+        });
+
+        costruisciOrvlay();
+
+        popolaElencoSedi();
+        popolaElencoProvincie();
+    }
+
+
+
+    function popolaElencoSedi(){
+        arrSediSelect = Object.keys(markerMAP);
+        var s = "Centro per l’impiego di";
+        //passo la funzuione selezionaSede() all'onchange
+        selectCPI.setAttribute('onchange', 'selezionaSede()');
+        $.each(arrSediSelect, function(idx, nome) {
+            //popola la select con il nome delle sedi
+            var cpi = document.createElement('option');
+            //ne assegno il valore per effettuare la ricerca
+            cpi.setAttribute('value', nome);
+            cpi.text = nome;
+            selectCPI.add(cpi);
+        });
+    }
+
+    function popolaElencoProvincie(){
+        cercaPerProvincia.setAttribute('onchange', 'filtraPerProvincia()')
+        var map = Object.keys(mappaPerProvincia);
+        $.each(map, function(idx, nomeProv) {
+            //popola la select con il nome delle provincie
+            var provincia = document.createElement('option');
+            provincia.setAttribute('value', nomeProv);
+            provincia.text = nomeProv;
+            cercaPerProvincia.add(provincia);
+        });
+    }
+
+    function costruisciOrvlay(){
+        //var mapToFind = Object.entries(mappaPerProvincia);
+        var mapToFind = Object.keys(mappaPerProvincia);
+        $.each(mapToFind, function(idx, elementOfArray) {
+            var newGroupLayers = new L.layerGroup();
+            $.each(mappaPerProvincia[elementOfArray].getLayers(), function(layerIdx, layer) {
+                newGroupLayers.addLayer(layer);
+            });
+            layerByProvince[elementOfArray] = newGroupLayers;
+        });
+    }
+
+
+    function selezionaSede() {
+        var scelta = selectCPI.value;
+        if(scelta !== "scegli"){
+            var arrTemp = [];
+            //uso la selezione per chimare gli oggetti stanziati nella mappa
+            var objScelto = markerMAP[scelta];
+            //prendo i valori corrispondenti
+            lat = objScelto.latitudine;
+            lng = objScelto.longitudine;
+            //popolo un array temporaneo che passerò alla function
+            arrTemp.push(lat, lng);
+            //richiamo il focus con le coordinate corrette
+            setFocus(arrTemp, objScelto);
+        } else {
+            resetFocus();
+        }
+    }
+
+    function filtraPerProvincia(){
+        var scelta = cercaPerProvincia.value;
+        var arrTemp = [];
+        //uso la selezione per chimare gli oggetti stanziati nella mappa
+        if(scelta !== "scegli"){
+            var setScelto = mappaPerProvincia[scelta].getLayers();
+            //prendo i valori corrispondenti
+            //svuoto il LayerGroup
+            markersLayer.clearLayers();
+
+            //aggiungo solo i puntatori della provincia selezionata
+            $.each(setScelto, function(idx, cpi){
+                markersLayer.addLayer(cpi);
+            });
+        } else {
+            var setScelto = Object.keys(mappaPerProvincia);
+
+            //svuoto il LayerGroup
+            markersLayer.clearLayers();
+
+            $.each(setScelto, function(idx, scelta) {
+                var toAdd = mappaPerProvincia[scelta].getLayers();
+                $.each(toAdd, function(toAddIdx, el) {
+                    markersLayer.addLayer(el);
+                });
+            });
+
+        }
+
+        popolaElencoSediASeguitoDiFiltro(setScelto);
+
+        //passo il LayerGroup alla mappa
+        markersLayer.addTo(mymap);
+        resetFocus();
+    }
+
+    function resetFocus(){
+        mymap.flyTo([45.215,7.949], 8, {animate: false});
+        $.each(arrTextElement, function(idx, htmlElment){
+            htmlElment.innerHTML = "";
+        });
+    }
+
+    function popolaElencoSediASeguitoDiFiltro(set){
+        var temp = [];
+        // arrSediSelect = Object.entries(mappaPerProvincia);
+        temp = set;
+        if(set[0] instanceof Object){
+            $('option', selectCPI).each(function(i, opzione) {
+                if(i > 0) opzione.parentNode.removeChild(opzione);
+            });
+            var s = "Centro per l’impiego di";
+            //passo la funzuione selezionaSede() all'onchange
+            selectCPI.setAttribute('onchange', 'selezionaSede()');
+            $.each(temp, function(idx, elemento) {
+                //popola la select con il nome delle sedi
+                var cpi = document.createElement('option');
+                //ne assegno il valore per effettuare la ricerca
+                cpi.setAttribute('value', elemento.sede.nome);
+                cpi.text = elemento.sede.nome;
+                selectCPI.add(cpi);
+            });
+        } else {
+            popolaElencoSedi();
+        }
+    }
+
+    function setFocus(latLng, oggettoPlus){
+        //to make everything much more 'weeeeeeeeee', set animate to true
+        mymap.flyTo(latLng, 18, {animate: false});
+        //se valorizzato opero il confronto per coordinate
+        if(oggettoPlus !== null){
+            popolaInfo(oggettoPlus);
+        }
+    }
+
+    function popolaInfo(objScelto){
+        $.each(arrTextElement, function(idx, node){
+            //se il nodo e' una mail ne creo il link per il mailto
+            if(node.id === 'mail'){
+                node.innerHTML = '<a href="mailto:'+objScelto[node.id]+'"">'+ (objScelto[node.id] || '').split('@').join('@<wbr/>') +'</a>';
+                //se il nodo e' il nome della sede
+            } else if(node.id === 'nome') {
+                var nomeSede = objScelto[node.id];
+                //controllo che sia un centro per l'impiego
+                if(nomeSede.indexOf("CPI ") !== -1){
+                    //ricavo il nome della sede
+                    nomeSede = "Centro per l'impiego di " + capitalize(nomeSede.slice("CPI di ".length));
+                }
+                //se possiede una sede decentrata
+                if(nomeSede.indexOf("SPORTELLO DI ") !== -1){
+                    nomeSede = "Sportello di " + capitalize(nomeSede.slice("SPORTELLO DI ".length));
+                }
+                //passo il nome al nodo per restituire il dato alla vista
+                node.innerHTML = nomeSede;
+            } else if(node.id === 'orario') {
+                var ora = "";
+                //verifico che objScelto[node.id] sia: true e se si uso il forEach() su di esso
+                if(objScelto[node.id]) {
+                    $.each(objScelto[node.id], function(objIdx, orario) {
+                        ora += orario.split(/\r?\n/).join('<br/>') + "<br/>"
+                    });
+                }
+                //passo all'html il valore
+                node.innerHTML = ora.toString();
+            } else if(node.id === 'indirizzo') {
+                node.innerHTML = (objScelto[node.id] || '').split(',').join('<br/>');
+            } else {
+                node.innerHTML = objScelto[node.id] || '';
+            }
+        });
+    }
+
+    function capitalize(name) {
+        var splittedName = name.toLowerCase().split('');
+        var nameCapitalized = "";
+        for (let i = 0; i < splittedName.length; i++) {
+            if(i == 0) {
+                nameCapitalized += splittedName[i].toUpperCase();
+            } else {
+                nameCapitalized += splittedName[i];
+            }
+        }
+        return nameCapitalized;
+    }
+
+
+    // console.log('markerMAP', markerMAP);
+
+</script>
+
+</body>
+</html>

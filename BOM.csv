@@ -1,0 +1,39 @@
+name-version.extension*,license*,copyrights*,end-of-support,dependencies,language,repository,email,URL
+cglib-2.2.2.jar,Apache-2.0,Copyright non presente,-,-,Java,-,-,-
+commons-httpclient-2.0.2.jar,Apache-2.0,Copyright non presente,-,-,Java,-,-,-
+commons-lang-2.5.jar,Apache-2.0,Copyright non presente,-,-,Java,-,-,-
+commons-logging-1.1.1.jar,Apache-2.0,Copyright non presente,-,-,Java,-,-,-
+csi-apachesoap-1.4.6.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+csi-core-1.4.6.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+csi-ejb-1.4.6.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+csi-rmi-1.4.6.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+csi-stadapter-1.4.6.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+gson-2.2.2.jar,Apache-2.0,Google,-,-,Java,-,-,-
+httpclient-4.4.1.jar,Apache-2.0,Copyright non presente,-,-,Java,-,-,-
+httpcore-4.4.1.jar,Apache-2.0,Copyright non presente,-,-,Java,-,-,-
+iridev2-pep-intf-2.0.0.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+jackson-core-asl-1.9.9.redhat-4.jar,Apache-2.0,Redhat,-,-,Java,-,-,-
+jackson-mapper-asl-1.9.9.redhat-4.jar,Apache-2.0,Redhat,-,-,Java,-,-,-
+jettison-1.3.1.jar,Apache-2.0,Copyright non presente,-,-,Java,-,-,-
+jsr311-api-1.1.1.jar,CDDL-1.0,Copyright non presente,-,-,Java,-,-,-
+mail-1.2.jar,Libreria Java di Base,Copyright non presente,-,-,Java,-,-,-
+resteasy-jaxrs-2.3.10.Final-redhat-1.jar,Apache-2.0,Redhat,-,-,Java,-,-,-
+silcommon-client-1.0.0.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+silos-jedi-1.1.4.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+silos-jeff-1.1.0.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+silos-orchsil-cxfclient-1.0.0.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+silpcommonobj-1.0.0.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+silpgsp-client-1.1.1.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+silpserver-gestioneprovvedimenti-client-1.0.0.0.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+silpserver-gestionesap-client-1.0.0.0.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+silpsval-cxfclient-1.6.0.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+silpsvde-cxfclient-1.5.0.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+silpsvin-cxfclient-1.4.0.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+silpsvsp-client-1.8.0.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+silpsvsp-cxfclient-1.8.0.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+soap-2.3.1.jar,Libreria Java di Base,Copyright non presente,-,-,Java,-,-,-
+swagger-annotations-1.5.18.jar,Apache-2.0,Copyright non presente,-,-,Java,-,-,-
+swagger-jaxrs-1.5.18.jar,Apache-2.0,Copyright non presente,-,-,Java,-,-,-
+util-perf-1.0.0.jar,"Apache-2.0; MIT (Rilasciata da CSI Piemonte su richiesta)",CSI-Piemonte,-,-,Java,-,-,-
+validation-api-1.0.0.GA-redhat-3.jar,Apache-2.0,Redhat,-,-,Java,-,-,-
+weblogic-client-3.0.0.jar,Oracle libreria non rilasciabile,Oracle,-,-,Java,-,-,-

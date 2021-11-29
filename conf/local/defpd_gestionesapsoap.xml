@@ -1,0 +1,139 @@
+<!-- ##################################################### -->
+<!-- # Copyright Regione Piemonte - 2021                 # -->
+<!-- # SPDX-License-Identifier: EUPL-1.2-or-later        # -->
+<!-- ##################################################### -->
+
+<porta-delegata name="gestionesapPD">
+  <services>
+    <service name="gestionesapPA" public-interface-class="it.csi.silp.silpserver.interfacecsi.gestionesap.GestioneSapSrv" >
+      <operations>
+        
+       <operation name="loadConfigurazioneProfiling" type="synch-call">
+          <param-list>
+            <param name="p0" type="it.csi.silpcommonobj.dati.common.CallInfoSilpDTO" />
+          </param-list>
+          <ret-val type="it.csi.silpcommonobj.dati.schedaprofessionale.profiling.ConfigurazioneProfilingSilpDTO"/>
+        </operation>
+         <operation name="calcoloProfiling" type="synch-call">
+          <param-list>
+            <param name="p0" type="it.csi.silpcommonobj.dati.common.CallInfoSilpDTO" />
+            <param name="p1" type="it.csi.silpcommonobj.filter.schedaprofessionale.profiling.ProfilingCalcoloSilpFilter" />
+          </param-list>
+          <ret-val type="it.csi.silpcommonobj.dati.schedaprofessionale.profiling.EsitoProfilingCalcoloSilpDTO"/>
+        </operation>
+       <operation name="loadInformazioniAggiuntive" type="synch-call">
+           <ret-val type="java.util.Vector"/>
+        </operation>        
+        <operation name="findInformazioniAggiuntiveLavoratoreService" type="synch-call">
+          <param-list>
+            <param name="p0" type="it.csi.silpcommonobj.dati.common.CallInfoSilpDTO" />
+            <param name="p1" type="it.csi.silpcommonobj.filter.informazioniaggiuntive.InformazioniAggiuntiveHeaderSilpFilter" />
+          </param-list>
+          <ret-val type="it.csi.silpcommonobj.dati.informazioniaggiuntive.EsitoInformazioniAggiuntiveSilpDTO"/>
+        </operation>
+        <operation name="getInformazioniAggiuntiveService" type="synch-call">
+          <param-list>
+            <param name="p0" type="it.csi.silpcommonobj.dati.common.CallInfoSilpDTO" />
+            <param name="p1" type="it.csi.silpcommonobj.dati.decodifiche.InformazioniAggiuntiveSilpDTO" />
+          </param-list>
+          <ret-val type="it.csi.silpcommonobj.dati.informazioniaggiuntive.EsitoInformazioniAggiuntiveSilpDTO"/>
+        </operation>
+        <operation name="saveConfigurazioneInformazioniAggiuntiveService" type="synch-call">
+          <param-list>
+            <param name="p0" type="it.csi.silpcommonobj.dati.common.CallInfoSilpDTO" />
+            <param name="p1" type="it.csi.silpcommonobj.dati.decodifiche.InformazioniAggiuntiveSilpDTO" />
+          </param-list>
+          <ret-val type="it.csi.silpcommonobj.dati.informazioniaggiuntive.EsitoInformazioniAggiuntiveSilpDTO"/>
+        </operation>
+        <operation name="saveInformazioniAggiuntiveLavoratoreService" type="synch-call">
+          <param-list>
+            <param name="p0" type="it.csi.silpcommonobj.dati.common.CallInfoSilpDTO" />
+            <param name="p1" type="it.csi.silpcommonobj.dati.informazioniaggiuntive.InformazioniAggiuntiveLavoratoreSilpDTO" />
+          </param-list>
+          <ret-val type="it.csi.silpcommonobj.dati.informazioniaggiuntive.EsitoInformazioniAggiuntiveSilpDTO"/>
+        </operation>
+        <operation name="findDichiarazioniFamiliariACarico" type="synch-call">
+          <param-list>
+            <param name="p0" type="it.csi.silpcommonobj.filter.collocamentomirato.FamiliariACaricoHeaderSilpFilter" />
+          </param-list>
+          <ret-val type="java.util.Vector"/>
+        </operation>
+        <operation name="loadDettaglioDichiarazioneFamiliariCarico" type="synch-call">
+          <param-list>
+            <param name="p0" type="java.lang.Long" />
+            <param name="p1" type="java.lang.Long" />
+            <param name="p2" type="boolean" />
+          </param-list>
+          <ret-val type="it.csi.silpcommonobj.dati.collocamentomirato.DettaglioCompletoDichiarazioneFamiliariACaricoDTO"/>
+        </operation>
+        <operation name="loadConfigurazioniCollocamentoMirato"
+			type="synch-call">
+			<param-list>
+				<param name="p0"
+					type="it.csi.silpcommonobj.dati.common.CallInfoSilpDTO" />
+			</param-list>
+			<ret-val
+				type="it.csi.silpcommonobj.dati.collocamentomirato.EsitoConfigurazioneCollocamentoMiratoDTO" />
+		</operation>
+		<operation name="saveRichiestaIscrizioneCollocamentoMirato"
+			type="synch-call">
+			<param-list>
+				<param name="p0"
+					type="it.csi.silpcommonobj.dati.common.CallInfoSilpDTO" />
+				<param name="p1"
+					type="it.csi.silpcommonobj.dati.collocamentomirato.richiestaiscrizione.DatiInputRichiestaIscrizioneCollocamentoMiratoSilpDTO" />
+			</param-list>
+			<ret-val
+				type="it.csi.silpcommonobj.dati.collocamentomirato.richiestaiscrizione.SaveEsitoRichiestaIscrizioneCollocamentoMiratoSilpDTO" />
+		</operation>
+		<operation name="findRichiestaIscrizioneCollocamentoMirato"
+			type="synch-call">
+			<param-list>
+				<param name="p0"
+					type="it.csi.silpcommonobj.dati.common.CallInfoSilpDTO" />
+				<param name="p1"
+					type="it.csi.silpcommonobj.filter.collocamentomirato.richiestaiscrizione.RichiestaIscrizioneL68HeaderFilter" />
+			</param-list>
+			<ret-val
+				type="it.csi.silpcommonobj.dati.collocamentomirato.richiestaiscrizione.EsitoRicercaRichiestaIscrizioneCollocamentoMiratoSilpDTO" />
+		</operation>
+      </operations>
+    </service>
+  </services>
+  <config>
+    <url-pa></url-pa>
+    <pluggable-pd-list chooser-class="it.csi.csi.porte.FixedDelegateChooser">
+           
+        <pluggable-pd name="gestionesapPA" class="it.csi.csi.porte.soap.apache.PortaDelegataSoap" url-pa="http://<host>:<port>/silpserverApplGestioneSapPabr/servlet/rpcrouter">
+        
+      <properties>
+         <property name="csi.connection.timeout" value="600000" />
+         <property name="csi.http.timeout" value="600000" />
+         <property name="csi.SSL.sendTimeout" value="600000" />
+         <property name="csi.SSL.receiveTimeout" value="600000" />
+        </properties>
+      </pluggable-pd>
+    </pluggable-pd-list>
+  <pre-function-handler-list>
+   <pluggable-fh
+     name="ClientVersionChecker"
+     class="it.csi.pslp.pslweb.pluginpdpa.ClientVersionChecker">
+    </pluggable-fh>
+   <pluggable-fh
+     name="ClientSecurityPlugin"
+     class="it.csi.pslp.pslweb.pluginpdpa.ClientSecurityPlugin">
+    </pluggable-fh>
+   <pluggable-fh
+     name="Decompressore"
+     class="it.csi.silp.silpserver.util.pluginpdpa.ClientSilpPlugin">
+    </pluggable-fh>
+    </pre-function-handler-list>
+    <post-function-handler-list>
+   <pluggable-fh
+     name="Decompressore"
+     class="it.csi.silp.silpserver.util.pluginpdpa.ClientSilpPlugin" >
+    </pluggable-fh>
+  </post-function-handler-list>
+    <queue-manager url="" />
+  </config>
+</porta-delegata>

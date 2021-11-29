@@ -1,0 +1,40 @@
+<!-- ##################################################### -->
+<!-- # Copyright Regione Piemonte - 2021                 # -->
+<!-- # SPDX-License-Identifier: EUPL-1.2-or-later        # -->
+<!-- ##################################################### -->
+<porta-delegata name="SilpGSPPD">
+  <services>
+    <service name="SILP-SILPGSP" public-interface-class="it.csi.silp.silpgsp.interf.GspFacade">
+      <operations>
+        <operation name="creaDocumento" type="synch-call">
+          <param-list>
+            <param name="p0" type="it.csi.silp.silpgsp.dto.GspDatiDocumentoDTO" />
+          </param-list>
+          <ret-val type="it.csi.silp.silpgsp.dto.GspDocumentoRTFDTO" />
+        </operation>
+        <operation name="creaDocumentoPDF" type="synch-call">
+          <param-list>
+            <param name="p0" type="it.csi.silp.silpgsp.dto.GspDatiDocumentoBeansDTO" />
+          </param-list>
+          <ret-val type="it.csi.silp.silpgsp.dto.GspDocumentoPdfDTO" />
+        </operation>
+      </operations>
+    </service>
+  </services>
+  <config>
+    <url-pa>multi://<host></url-pa>
+    <pluggable-pd-list chooser-class="it.csi.csi.porte.FixedDelegateChooser">
+      <pluggable-pd name="SilpGSPPA" class="it.csi.csi.porte.ejb20.PortaDelegataEJB" url-pa="silp.silpgsp.ejb.GspFacadePA">
+        <properties>
+          <property name="java.naming.provider.url" value="@@@silpgsp.url@@@" />
+          <property name="java.naming.factory.initial" value="weblogic.jndi.WLInitialContextFactory" />
+          <property name="csi.auth.jaas.client.class" value="it.csi.csi.porte.ejb.jaas.weblogic.WeblogicJAASNativeClient" />
+          <property name="csi.auth.basic" value="" />
+        </properties>
+      </pluggable-pd>
+    </pluggable-pd-list>
+    <queue-manager url="rmi://:2001/QMgrCli" />
+  </config>
+</porta-delegata>
+
+
